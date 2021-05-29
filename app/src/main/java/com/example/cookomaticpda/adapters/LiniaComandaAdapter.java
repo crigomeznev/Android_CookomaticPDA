@@ -13,8 +13,9 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cookomaticpda.R;
-import com.example.cookomaticpda.model.cuina.Plat;
-import com.example.cookomaticpda.model.sala.LiniaComanda;
+
+import org.milaifontanals.cookomatic.model.cuina.Plat;
+import org.milaifontanals.cookomatic.model.sala.LiniaComanda;
 
 import java.util.List;
 

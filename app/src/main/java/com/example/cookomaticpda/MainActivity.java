@@ -16,13 +16,13 @@ import android.widget.Toast;
 
 import com.example.cookomaticpda.adapters.InfoTaulaAdapter;
 import com.example.cookomaticpda.adapters.TaulaAdapter;
-import com.example.cookomaticpda.model.sala.Cambrer;
-import com.example.cookomaticpda.model.sala.Comanda;
-import com.example.cookomaticpda.model.sala.Taula;
 
 import org.cookomatic.protocol.CodiOperacio;
 import org.cookomatic.protocol.InfoTaula;
 import org.cookomatic.protocol.LoginTuple;
+import org.milaifontanals.cookomatic.model.sala.Cambrer;
+import org.milaifontanals.cookomatic.model.sala.Comanda;
+import org.milaifontanals.cookomatic.model.sala.Taula;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -279,7 +279,7 @@ public class MainActivity extends AppCompatActivity
         Cambrer cambrer = new Cambrer(1,"pepito","pepez","","pepito","pepito");
 
         for (int i = 0; i < 5; i++) {
-            Comanda com = new Comanda(i+1, new Date(), mTaules.get(i), cambrer);
+            Comanda com = new Comanda(i+1, new Date(), mTaules.get(i).getNumero(), cambrer, false);
 
 //            for (int j = 0; j < 4; j++) {
 //                com.addLinia(new LiniaComanda(j+1, j+2, EstatLinia.EN_PREPARACIO));

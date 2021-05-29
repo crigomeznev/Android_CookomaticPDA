@@ -15,8 +15,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cookomaticpda.PresaComandaActivity;
 import com.example.cookomaticpda.R;
-import com.example.cookomaticpda.model.cuina.Plat;
-import com.example.cookomaticpda.model.sala.Taula;
+
+import org.milaifontanals.cookomatic.model.cuina.Plat;
 
 import java.util.List;
 

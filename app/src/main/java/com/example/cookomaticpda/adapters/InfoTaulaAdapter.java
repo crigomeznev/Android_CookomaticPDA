@@ -10,7 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cookomaticpda.R;
-import com.example.cookomaticpda.model.sala.Taula;
 
 import org.cookomatic.protocol.InfoTaula;
 

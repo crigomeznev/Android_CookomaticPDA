@@ -18,16 +18,15 @@ import com.example.cookomaticpda.adapters.InfoTaulaAdapter;
 import com.example.cookomaticpda.adapters.LiniaComandaAdapter;
 import com.example.cookomaticpda.adapters.PlatAdapter;
 import com.example.cookomaticpda.adapters.TaulaAdapter;
-import com.example.cookomaticpda.model.cuina.Categoria;
-import com.example.cookomaticpda.model.cuina.Plat;
-import com.example.cookomaticpda.model.sala.Comanda;
-import com.example.cookomaticpda.model.sala.EstatLinia;
-import com.example.cookomaticpda.model.sala.LiniaComanda;
-import com.example.cookomaticpda.model.sala.Taula;
 
 import org.cookomatic.protocol.CodiOperacio;
 import org.cookomatic.protocol.InfoTaula;
 import org.cookomatic.protocol.LoginTuple;
+import org.milaifontanals.cookomatic.model.cuina.Categoria;
+import org.milaifontanals.cookomatic.model.cuina.Plat;
+import org.milaifontanals.cookomatic.model.sala.Comanda;
+import org.milaifontanals.cookomatic.model.sala.EstatLinia;
+import org.milaifontanals.cookomatic.model.sala.LiniaComanda;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -35,6 +34,7 @@ import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -55,6 +55,11 @@ public class PresaComandaActivity extends AppCompatActivity
     private List<Plat> mPlatsFiltrats;
     private List<LiniaComanda> mLinies;
     private Comanda mComanda;
+
+    // TODO: DICCIONARIS DE PLATS, CATEGORIES
+//    private HashMap<Long, >
+
+
 
     private RecyclerView rcyPlats;
     private RecyclerView rcyLinies;
@@ -87,8 +92,8 @@ public class PresaComandaActivity extends AppCompatActivity
         rcyLinies = findViewById(R.id.rcyLinies);
         rcyCategories = findViewById(R.id.rcyCategories);
 
-        rcyPlats.setLayoutManager(new GridLayoutManager(this, 2)); // 3 columnes
-        rcyPlats.setAdapter(new PlatAdapter(this, this, mPlatsFiltrats));
+//        rcyPlats.setLayoutManager(new GridLayoutManager(this, 2)); // 3 columnes
+//        rcyPlats.setAdapter(new PlatAdapter(this, this, mPlatsFiltrats));
 
         rcyLinies.setLayoutManager(new LinearLayoutManager(this));
         lcAdapter = new LiniaComandaAdapter(this, mLinies);
@@ -107,10 +112,10 @@ public class PresaComandaActivity extends AppCompatActivity
     private void iniCategories() {
         mCategories = new ArrayList<>();
 
-        mCategories.add(new Categoria(1, "Entrants", 1));
-        mCategories.add(new Categoria(2, "Primers", 1));
-        mCategories.add(new Categoria(3, "Segons", 1));
-        mCategories.add(new Categoria(4, "Postres", 1));
+//        mCategories.add(new Categoria(1, "Entrants", 1));
+//        mCategories.add(new Categoria(2, "Primers", 1));
+//        mCategories.add(new Categoria(3, "Segons", 1));
+//        mCategories.add(new Categoria(4, "Postres", 1));
 
 //        btnsCategories = new ArrayList<>();
 //        for(Categoria c : mCategories){
@@ -140,16 +145,16 @@ public class PresaComandaActivity extends AppCompatActivity
         mPlats = new ArrayList<>();
         mPlatsFiltrats = new ArrayList<>();
 
-        mPlats.add(new Plat(1, "Patates fregides", "patates fregides", new BigDecimal(2.00),
-                null, true, mCategories.get(0), null));
-        mPlats.add(new Plat(1, "Amanida", "Amanida", new BigDecimal(2.00),
-                null, true, mCategories.get(0), null));
-        mPlats.add(new Plat(1, "Gaspatxo", "patates fregides", new BigDecimal(2.00),
-                null, true, mCategories.get(1), null));
-        mPlats.add(new Plat(1, "Pollastre", "patates fregides", new BigDecimal(2.00),
-                null, true, mCategories.get(2), null));
-        mPlats.add(new Plat(1, "Coulant de xocolata", "patates fregides", new BigDecimal(2.00),
-                null, true, mCategories.get(3), null));
+//        mPlats.add(new Plat(1, "Patates fregides", "patates fregides", new BigDecimal(2.00),
+//                null, true, mCategories.get(0), null));
+//        mPlats.add(new Plat(1, "Amanida", "Amanida", new BigDecimal(2.00),
+//                null, true, mCategories.get(0), null));
+//        mPlats.add(new Plat(1, "Gaspatxo", "patates fregides", new BigDecimal(2.00),
+//                null, true, mCategories.get(1), null));
+//        mPlats.add(new Plat(1, "Pollastre", "patates fregides", new BigDecimal(2.00),
+//                null, true, mCategories.get(2), null));
+//        mPlats.add(new Plat(1, "Coulant de xocolata", "patates fregides", new BigDecimal(2.00),
+//                null, true, mCategories.get(3), null));
     }
 
     // TODO: borrar
@@ -190,7 +195,8 @@ public class PresaComandaActivity extends AppCompatActivity
                     rcyCategories.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
                     rcyCategories.setAdapter(new CategoriaAdapter(this, mCategories));
 
-
+                    rcyPlats.setLayoutManager(new GridLayoutManager(this, 2)); // 3 columnes
+                    rcyPlats.setAdapter(new PlatAdapter(this, this, mPlats));
                     // construir recycler taules
                     //-------------  END OF UI THREAD ---------------------------------------
                 });
@@ -233,7 +239,7 @@ public class PresaComandaActivity extends AppCompatActivity
                 throw new RuntimeException("sessionId erroni, operacio avortada");
             }
 
-            // Llegim qt de taules que ens enviarà el server
+            // Llegim qt de categories que ens enviarà el server
             Log.d("SRV", "esperant resposta del server");
             qtCategories = ois.readInt();
             Log.d("SRV", "resposta del server REBUDA");
@@ -250,9 +256,26 @@ public class PresaComandaActivity extends AppCompatActivity
             }
 
 
+            // Llegim qt de plats que ens enviarà el server
+            Log.d("SRV", "esperant resposta del server");
+            qtPlats = ois.readInt();
+            Log.d("SRV", "resposta del server REBUDA");
+
+            for (int i = 0; i < qtPlats; i++) {
+                // llegim objecte
+                Plat plat = (Plat)ois.readObject();
+                Log.d("GETCARTA","Plat recuperada: "+plat.getNom());
+                plats.add(plat);
+
+                // enviem ok
+                oos.write(new byte[1]);
+                oos.flush();
+            }
+
+
             // TODO: recuperar plats
 
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (Exception  e) {
             e.printStackTrace();
             Log.d("SRV", e.getLocalizedMessage());
         } finally {
