@@ -1,7 +1,6 @@
 package com.example.cookomaticpda.adapters;
 
 import android.app.Activity;
-import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,11 +10,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.cookomaticpda.MainActivity;
 import com.example.cookomaticpda.R;
 import com.example.cookomaticpda.model.sala.Comanda;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ComandaAdapter extends RecyclerView.Adapter<ComandaAdapter.ViewHolder> {
@@ -34,7 +31,7 @@ public class ComandaAdapter extends RecyclerView.Adapter<ComandaAdapter.ViewHold
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        int layout = R.layout.item_taula;
+        int layout = R.layout.taula_item_propia;
 
         View taulaView = LayoutInflater.from(parent.getContext()).inflate(layout, parent, false);
         return new ViewHolder(taulaView);

@@ -5,6 +5,8 @@
  */
 package com.example.cookomaticpda.model.sala;
 
+import com.example.cookomaticpda.model.cuina.Plat;
+
 import java.io.Serializable;
 
 /**
@@ -16,14 +18,18 @@ public class LiniaComanda implements Serializable {
     private int num;
     private int quantitat;
     private EstatLinia estat;
+    private Plat item;
+
+
 
     protected LiniaComanda() {
     }
 
-    public LiniaComanda(int num, int quantitat, EstatLinia estat) {
+    public LiniaComanda(int num, int quantitat, EstatLinia estat, Plat item) {
         setNum(num);
         setQuantitat(quantitat);
         setEstat(estat);
+        setItem(item);
     }
 
     public int getNum() {
@@ -50,4 +56,24 @@ public class LiniaComanda implements Serializable {
         this.estat = estat;
     }
 
+    public Plat getItem() {
+        return item;
+    }
+
+    public void setItem(Plat item) {
+        this.item = item;
+    }
+
+    // TODO: getImport()
+
+
+    @Override
+    public String toString() {
+        return "LiniaComanda{" +
+                "num=" + num +
+                ", quantitat=" + quantitat +
+                ", estat=" + estat +
+                ", item=" + item.getNom() +
+                '}';
+    }
 }

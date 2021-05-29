@@ -69,17 +69,17 @@ public class LoginActivity extends AppCompatActivity {
 
 
                 } else {
-                    userLogin();
+//                    userLogin();
 
-//                    if (!login.equals(loginSP) || !password.equals(passwordSP)) {
-//                        // Login incorrecte (login o contrasenya incorrectes), no deixem entrar
-//                        Toast.makeText(getApplicationContext(), "Login o contrasenya incorrectes", Toast.LENGTH_SHORT).show();
-//
-//                    } else {
-//                        // Login correcte o primer login, deixem entrar
-//                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-//                        startActivity(intent);
-//                    }
+                    if (!login.equals(loginSP) || !password.equals(passwordSP)) {
+                        // Login incorrecte (login o contrasenya incorrectes), no deixem entrar
+                        Toast.makeText(getApplicationContext(), "Login o contrasenya incorrectes", Toast.LENGTH_SHORT).show();
+
+                    } else {
+                        // Login correcte o primer login, deixem entrar
+                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                        startActivity(intent);
+                    }
                 }
 
 
@@ -133,26 +133,72 @@ public class LoginActivity extends AppCompatActivity {
 
                     LoginTuple lt = new LoginTuple(login, password, null); // client inicialment no coneix el seu sessionID
                     final Long sessionId;
+                    Long sessionIdAux = null;
 
                     try {
                         // enviem logintuple
-                        oos.writeObject(lt);
+                        Log.d("SRV", "enviant missatge");
 
+                        // Enviem codi d'operació: LOGIN - 1
+                        oos.writeInt(1);
+                        oos.flush();
+                        // llegim ok
+                        ois.readInt();
+
+                        //                        oos.writeObject(lt);
+                        // Enviarem "tupla" camp per camp al server
+                        oos.writeUTF(login);
+                        oos.flush();
+                        // llegim ok
+                        ois.readInt();
+                        oos.writeUTF(password);
+                        oos.flush();
+                        // llegim ok
+                        ois.readInt();
+
+                        oos.flush();
+                        Log.d("SRV", "missatge enviat");
+
+
+                        Log.d("SRV", "esperant resposta del server");
                         int res = ois.readInt();
+//                        int res = (int)ois.readObject();
 
                         // si la resposta == OK
                         if (res == 1) {
-                            lt = (LoginTuple)ois.readObject();
+                            // llegim login
+                            String login = ois.readUTF();
+                            // enviem ok
+                            oos.writeInt(1);
+                            oos.flush();
+
+                            // llegim passwd
+                            String password = ois.readUTF();
+                            // enviem ok
+                            oos.writeInt(1);
+                            oos.flush();
+
+                            // llegim session id
+                            sessionIdAux = ois.readLong();
+                            // enviem ok
+                            oos.writeInt(1);
+                            oos.flush();
+
+//                            lt = (LoginTuple)ois.readObject();
                         }
 
-                    } catch (IOException | ClassNotFoundException ex) {
+                    } catch (IOException ex) {
                         System.out.println(ex);
                         System.out.println(ex.getMessage());
                         ex.printStackTrace();
+
+                    } finally {
+                        oos.close();
+                        socket.close();
                     }
-                    sessionId = lt.getSessionId();
 
-
+                    sessionId = sessionIdAux;
+                    // actualitzar UI
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -161,8 +207,6 @@ public class LoginActivity extends AppCompatActivity {
                         }
                     });
 
-                    oos.close();
-                    socket.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

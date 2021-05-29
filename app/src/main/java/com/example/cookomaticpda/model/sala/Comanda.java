@@ -7,6 +7,7 @@ package com.example.cookomaticpda.model.sala;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -18,18 +19,22 @@ import java.util.List;
 public class Comanda implements Serializable{
     private long codi;
     private Date data;
-    private int taula;
+//    private int taula;
+    private Taula taula;
     private Cambrer cambrer;
     private List<LiniaComanda> linies;
+    private boolean finalitzada;
     
     protected Comanda() {
     }
 
-    public Comanda(long codi, Date data, int taula, Cambrer cambrer) {
-        this.codi = codi;
-        this.data = data;
-        this.taula = taula;
-        this.cambrer = cambrer;
+    public Comanda(long codi, Date data, Taula taula, Cambrer cambrer) {
+        setCodi(codi);
+        setData(data);
+        setTaula(taula);
+        setCambrer(cambrer);
+        this.finalitzada = false;
+        this.linies = new ArrayList<>();
     }
     
     public long getCodi() {
@@ -48,12 +53,24 @@ public class Comanda implements Serializable{
         this.data = data;
     }
 
-    public int getTaula() {
+    public Taula getTaula() {
         return taula;
     }
 
-    public void setTaula(int taula) {
+    public void setTaula(Taula taula) {
         this.taula = taula;
+
+        // si la comanda no està finalitzada, la comanda activa de la taula serà aquesta
+        if (!finalitzada){
+            if (this.taula.getComandaActiva() == null) {
+                this.taula.setComandaActiva(this);
+            }
+            else {
+                // TODO: només deixarem crear comanda assignada a una taula quan la taula estigui lliure
+                // és a dir, no tingui cap comanda activa
+            }
+        }
+
     }
 
     public Cambrer getCambrer() {
@@ -63,7 +80,19 @@ public class Comanda implements Serializable{
     public void setCambrer(Cambrer cambrer) {
         this.cambrer = cambrer;
     }
-    
+
+    public boolean isFinalitzada() {
+        return finalitzada;
+    }
+
+    public void setFinalitzada(boolean finalitzada) {
+        this.finalitzada = finalitzada;
+
+        // comanda finalitzada, la taula queda lliure
+        if (this.finalitzada)
+            this.taula.setComandaActiva(null);
+    }
+
     public Iterator<LiniaComanda> iteLinies() {
         return linies.iterator();
     }

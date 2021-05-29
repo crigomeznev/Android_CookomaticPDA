@@ -6,6 +6,7 @@
 package com.example.cookomaticpda.model.cuina;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  *
@@ -71,6 +72,17 @@ public class Categoria implements Serializable{
     public String toString() {
         return nom;
     }
-    
-    
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Categoria categoria = (Categoria) o;
+        return codi == categoria.codi;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(codi);
+    }
 }

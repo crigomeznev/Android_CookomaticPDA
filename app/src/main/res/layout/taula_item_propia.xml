@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/taula_bg_propia"
+    android:layout_margin="10dp"
+    android:padding="10dp">
+
+    <TextView
+        android:id="@+id/txvNumTaula"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1" android:textStyle="bold"></TextView>
+    <TextView
+        android:id="@+id/txvCambrer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pepito"></TextView>
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="100"
+        android:progress="50"
+        android:progressDrawable="@drawable/progress_bar_bg" />
+
+
+</LinearLayout>

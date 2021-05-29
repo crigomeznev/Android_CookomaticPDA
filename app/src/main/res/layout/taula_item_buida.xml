@@ -2,14 +2,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@drawable/taula_grid_background"
-    android:layout_margin="10dp">
+    android:background="@drawable/taula_bg_buida"
+    android:layout_margin="10dp"
+    android:padding="10dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TAULA"
-        android:textSize="20dp"></TextView>
     <TextView
         android:id="@+id/txvNumTaula"
         android:layout_width="wrap_content"
@@ -20,7 +16,7 @@
         android:id="@+id/txvCambrer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Pepito"
+        android:text=""
         android:textSize="30dp"></TextView>
 
 </LinearLayout>

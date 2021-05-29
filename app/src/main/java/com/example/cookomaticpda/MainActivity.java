@@ -1,10 +1,11 @@
 package com.example.cookomaticpda;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -13,26 +14,29 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.cookomaticpda.adapters.ComandaAdapter;
+import com.example.cookomaticpda.adapters.TaulaAdapter;
 import com.example.cookomaticpda.model.sala.Cambrer;
 import com.example.cookomaticpda.model.sala.Comanda;
+import com.example.cookomaticpda.model.sala.EstatLinia;
+import com.example.cookomaticpda.model.sala.LiniaComanda;
+import com.example.cookomaticpda.model.sala.Taula;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+    implements TaulaAdapter.OnSelectedItemListener {
 
-    private RecyclerView rcyComandes;
-    private ComandaAdapter mAdapter;
+    private RecyclerView rcyTaules;
+//    private ComandaAdapter mAdapter;
+    private TaulaAdapter mAdapter;
     private List<Comanda> mComandes;
+    private List<Taula> mTaules;
 
     // BORRAR
     private Button btnProva;
@@ -45,14 +49,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // TODO: ini comandes de la DB
+        iniTaules();
         iniComandes();
 
-        rcyComandes = findViewById(R.id.rcyComandes);
+        rcyTaules = findViewById(R.id.rcyTaules);
 
 //        rcyComandes.setLayoutManager(new LinearLayoutManager(this));
-        rcyComandes.setLayoutManager(new GridLayoutManager(this,3)); // 3 columnes
-        mAdapter = new ComandaAdapter(this, mComandes);
-        rcyComandes.setAdapter(mAdapter);
+        rcyTaules.setLayoutManager(new GridLayoutManager(this,3)); // 3 columnes
+//        mAdapter = new ComandaAdapter(this, mComandes);
+        mAdapter = new TaulaAdapter(this, mTaules);
+        rcyTaules.setAdapter(mAdapter);
 
 
 
@@ -64,9 +70,18 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 //                sendMessage(txvServer.getText().toString());
-                sendMessage("HOLA MUNDO");
+//                sendMessage("HOLA MUNDO");
+
             }
         });
+    }
+
+    private void iniTaules() {
+        mTaules = new ArrayList<>();
+
+        for (int i = 0; i < 5; i++) {
+            mTaules.add(new Taula(i+1));
+        }
     }
 
     private void sendMessage(final String msg) {
@@ -140,16 +155,45 @@ public class MainActivity extends AppCompatActivity {
     private void iniComandes() {
         mComandes = new ArrayList<>();
 
-        mComandes.add(new Comanda(1, new Date(), 1,
-                new Cambrer(1,"pepito","pepez","","pepito","pepito")));
-        mComandes.add(new Comanda(1, new Date(), 1,
-                new Cambrer(1,"pepito","pepez","","pepito","pepito")));
-        mComandes.add(new Comanda(1, new Date(), 1,
-                new Cambrer(1,"pepito","pepez","","pepito","pepito")));
-        mComandes.add(new Comanda(1, new Date(), 1,
-                new Cambrer(1,"pepito","pepez","","pepito","pepito")));
+        Cambrer cambrer = new Cambrer(1,"pepito","pepez","","pepito","pepito");
+
+        for (int i = 0; i < 5; i++) {
+            Comanda com = new Comanda(i+1, new Date(), mTaules.get(i), cambrer);
+
+//            for (int j = 0; j < 4; j++) {
+//                com.addLinia(new LiniaComanda(j+1, j+2, EstatLinia.EN_PREPARACIO));
+//            }
+            if (i%2==0)
+                com.setFinalitzada(true);
+            mComandes.add(com);
+        }
+
+//        mComandes.add();
+//        mComandes.add(new Comanda(1, new Date(), 1,
+//                new Cambrer(1,"pepito","pepez","","pepito","pepito")));
+//        mComandes.add(new Comanda(1, new Date(), 1,
+//                new Cambrer(1,"pepito","pepez","","pepito","pepito")));
+//        mComandes.add(new Comanda(1, new Date(), 1,
+//                new Cambrer(1,"pepito","pepez","","pepito","pepito")));
 
 
         Log.d("TAULA","comandes = "+mComandes);
+    }
+
+
+    // Implements Taula.Onselecteditemlistener
+    @Override
+    public void onSelectedItem(Taula seleccionada) {
+        Intent intent = new Intent(getApplicationContext(), PresaComandaActivity.class);
+        startActivityForResult(intent,1);
+    }
+
+
+    // Quan tornem de l'altra activity cap aquesta
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d("INTENTS", "Hem tornat a la MainActivity");
     }
 }
