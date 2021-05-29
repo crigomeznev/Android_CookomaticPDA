@@ -27,7 +27,9 @@ import java.net.Socket;
 public class LoginActivity extends AppCompatActivity {
 
     // moure d'aqui
-    private final String SRVIP = "192.168.1.108";
+//    private final String SRVIP = "192.168.1.108";
+//    private final String SRVIP = "192.168.1.105";
+    private final String SRVIP = "192.168.1.106";
     private final int SRVPORT = 9876;
 
 
@@ -54,22 +56,15 @@ public class LoginActivity extends AppCompatActivity {
                 String loginSP = getFromSharedPreferences("login");
                 String passwordSP = getFromSharedPreferences("password");
 
-                Log.d("LOGIN", "loginSP="+loginSP+"\tpasswordSP="+passwordSP);
+                Log.d("LOGIN", "loginSP=" + loginSP + "\tpasswordSP=" + passwordSP);
 
-                if (loginSP.isEmpty() || passwordSP.isEmpty()){
+                if (loginSP.isEmpty() || passwordSP.isEmpty()) {
                     // primer login, ens guardem aquestes credencials
                     saveLoginSharedPreferences(login, password);
                     Toast.makeText(getApplicationContext(), "Login i contrasenya registrats correctament", Toast.LENGTH_SHORT).show();
 
-
-                    // PROVA
-                    // Enviar resp al servidor
-
-
-
-
                 } else {
-//                    userLogin();
+                    userLogin();
 
                     if (!login.equals(loginSP) || !password.equals(passwordSP)) {
                         // Login incorrecte (login o contrasenya incorrectes), no deixem entrar
@@ -83,8 +78,6 @@ public class LoginActivity extends AppCompatActivity {
                 }
 
 
-
-
             }
         });
 
@@ -92,7 +85,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
 
-    private void saveLoginSharedPreferences(String login, String password){
+    private void saveLoginSharedPreferences(String login, String password) {
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
 
@@ -103,7 +96,7 @@ public class LoginActivity extends AppCompatActivity {
         editor.apply();
     }
 
-    private String getFromSharedPreferences(String key){
+    private String getFromSharedPreferences(String key) {
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
 
         String value = sharedPref.getString(key, "");
@@ -114,10 +107,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
 
-
-
-
-    private void userLogin() {
+    private void userLogin_COPY() {
         final Handler handler = new Handler();
 
         String login = edtLogin.getText().toString();
@@ -203,7 +193,7 @@ public class LoginActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             // actualitzem la resposta del server per poder veure-la en la UI
-                            txvSessionId.setText(sessionId+"");
+                            txvSessionId.setText(sessionId + "");
                         }
                     });
 
@@ -216,7 +206,113 @@ public class LoginActivity extends AppCompatActivity {
         thread.start();
     }
 
+    private boolean userLogin() {
+        final Handler handler = new Handler();
+        boolean credencialsCorrectes = false;
 
+        String login = edtLogin.getText().toString();
+        String password = edtPassword.getText().toString();
+
+        Thread thread = new Thread(new Runnable() {
+            private boolean credencialsCorrectes = false;
+
+            @Override
+            public void run() {
+                Socket socket = null;
+                ObjectOutputStream oos = null;
+                ObjectInputStream ois = null;
+
+                try {
+                    socket = new Socket(SRVIP, SRVPORT);
+                    oos = new ObjectOutputStream(socket.getOutputStream());
+                    ois = new ObjectInputStream(socket.getInputStream());
+
+                    LoginTuple lt = new LoginTuple(login, password, null); // client inicialment no coneix el seu sessionID
+                    final Long sessionId;
+                    Long sessionIdAux = null;
+
+//                    try {
+                    // enviem logintuple
+                    Log.d("SRV", "enviant missatge");
+
+                    // Enviem codi d'operació: LOGIN - 1
+                    oos.writeInt(1);
+                    oos.flush();
+                    // llegim ok
+//                        Log.d("SRV", "esperant ok");
+//                        ois.readInt();
+
+                    // Enviarem "tupla" LoginTuple
+                    oos.writeObject(lt);
+                    oos.flush();
+                    Log.d("SRV", "missatge enviat");
+                    // llegim ok
+                    ois.readInt();
+
+
+                    Log.d("SRV", "esperant resposta del server");
+                    int res = ois.readInt();
+                    Log.d("SRV", "resposta del server REBUDA");
+//                        int res = (int)ois.readObject();
+
+                    // si la resposta == OK
+                    if (res == 1) {
+                        credencialsCorrectes = true;
+                        // llegim LoginTuple
+                        lt = (LoginTuple) ois.readObject();
+                        // enviem ok
+                        oos.writeInt(1);
+                        oos.flush();
+                    } else {
+                        // Empleat no consta a la BD o login incorrecte
+                        credencialsCorrectes = false;
+                    }
+
+//                    } catch (IOException | ClassNotFoundException ex) {
+//                        System.out.println(ex);
+//                        System.out.println(ex.getMessage());
+//                        ex.printStackTrace();
+
+
+//                    sessionId = sessionIdAux;
+//                    // actualitzar UI
+//                    handler.post(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            // actualitzem la resposta del server per poder veure-la en la UI
+//                            txvSessionId.setText(sessionId+"");
+//                        }
+//                    });
+
+                } catch (IOException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                    Log.d("SRV", e.getLocalizedMessage());
+                } finally {
+                    try {
+                        oos.close();
+                        socket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        Log.d("SRV", e.getLocalizedMessage());
+                    }
+                }
+            }
+
+            public boolean getCredencialsCorrectes(){
+                return credencialsCorrectes;
+            }
+        });
+
+        thread.start();
+        try {
+            thread.join(); // TODO: afegir progressbar
+
+        } catch (InterruptedException e) {
+            Log.d("SRV", e.getLocalizedMessage());
+            e.printStackTrace();
+        }
+
+    }
 
 
 }
