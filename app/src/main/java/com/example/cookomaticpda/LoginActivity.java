@@ -1,6 +1,7 @@
 package com.example.cookomaticpda;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.content.Context;
 import android.content.Intent;
@@ -17,6 +18,7 @@ import android.widget.Toast;
 //import com.example.cookomaticpda.borrar.LoginTuple;
 
 
+import org.cookomatic.protocol.CodiOperacio;
 import org.cookomatic.protocol.LoginTuple;
 
 import java.io.IOException;
@@ -24,18 +26,24 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+
 public class LoginActivity extends AppCompatActivity {
 
     // moure d'aqui
 //    private final String SRVIP = "192.168.1.108";
 //    private final String SRVIP = "192.168.1.105";
-    private final String SRVIP = "192.168.1.106";
-    private final int SRVPORT = 9876;
+
 
 
     private Button btnStart;
     private EditText edtLogin, edtPassword;
     private TextView txvSessionId;
+
+    // Login
+    private LoginTuple loginTuple;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,20 +72,39 @@ public class LoginActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "Login i contrasenya registrats correctament", Toast.LENGTH_SHORT).show();
 
                 } else {
-                    userLogin();
+                    // Crida assíncrona per enviar credencials al servidor
+                    Observable.fromCallable(() -> {
+                        //---------------- START OF THREAD ------------------------------------
+                        // Això és el codi que s'executarà en un fil
 
-                    if (!login.equals(loginSP) || !password.equals(passwordSP)) {
-                        // Login incorrecte (login o contrasenya incorrectes), no deixem entrar
-                        Toast.makeText(getApplicationContext(), "Login o contrasenya incorrectes", Toast.LENGTH_SHORT).show();
-
-                    } else {
-                        // Login correcte o primer login, deixem entrar
-                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                        startActivity(intent);
-                    }
+                        // demanem al server un logintuple que conté session id
+                        // si credencials correctes, ens el retorna
+                        // altrament, obtenim null
+                        return userLogin();
+                        //--------------- END OF THREAD-------------------------------------
+                    })
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe((newLoginTuple) -> {
+                                //-------------  UI THREAD ---------------------------------------
+                                // El codi que tenim aquí s'executa només quan el fil
+                                // ha acabat !! A més, aquest codi s'executa en el fil
+                                // d'interfície gràfica.
+//                                setLoading(false); // TODO: progressbar
+                                loginTuple = newLoginTuple;
+                                if (loginTuple == null) {
+                                    // Login incorrecte (login o contrasenya incorrectes), no deixem entrar
+                                    Toast.makeText(getApplicationContext(), "Login o contrasenya incorrectes, o cambrer no consta en la BD", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    // Login correcte o primer login, deixem entrar
+                                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                                    // passem loginTuple a l'altra activity
+                                    intent.putExtra("loginTuple", loginTuple);
+                                    startActivity(intent);
+                                }
+                                //-------------  END OF UI THREAD ---------------------------------------
+                            });
                 }
-
-
             }
         });
 
@@ -106,213 +133,89 @@ public class LoginActivity extends AppCompatActivity {
         return value;
     }
 
-
-    private void userLogin_COPY() {
-        final Handler handler = new Handler();
-
-        String login = edtLogin.getText().toString();
-        String password = edtPassword.getText().toString();
-
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Socket socket = new Socket(SRVIP, SRVPORT);
-                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-                    ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-
-                    LoginTuple lt = new LoginTuple(login, password, null); // client inicialment no coneix el seu sessionID
-                    final Long sessionId;
-                    Long sessionIdAux = null;
-
-                    try {
-                        // enviem logintuple
-                        Log.d("SRV", "enviant missatge");
-
-                        // Enviem codi d'operació: LOGIN - 1
-                        oos.writeInt(1);
-                        oos.flush();
-                        // llegim ok
-                        ois.readInt();
-
-                        //                        oos.writeObject(lt);
-                        // Enviarem "tupla" camp per camp al server
-                        oos.writeUTF(login);
-                        oos.flush();
-                        // llegim ok
-                        ois.readInt();
-                        oos.writeUTF(password);
-                        oos.flush();
-                        // llegim ok
-                        ois.readInt();
-
-                        oos.flush();
-                        Log.d("SRV", "missatge enviat");
-
-
-                        Log.d("SRV", "esperant resposta del server");
-                        int res = ois.readInt();
-//                        int res = (int)ois.readObject();
-
-                        // si la resposta == OK
-                        if (res == 1) {
-                            // llegim login
-                            String login = ois.readUTF();
-                            // enviem ok
-                            oos.writeInt(1);
-                            oos.flush();
-
-                            // llegim passwd
-                            String password = ois.readUTF();
-                            // enviem ok
-                            oos.writeInt(1);
-                            oos.flush();
-
-                            // llegim session id
-                            sessionIdAux = ois.readLong();
-                            // enviem ok
-                            oos.writeInt(1);
-                            oos.flush();
-
-//                            lt = (LoginTuple)ois.readObject();
-                        }
-
-                    } catch (IOException ex) {
-                        System.out.println(ex);
-                        System.out.println(ex.getMessage());
-                        ex.printStackTrace();
-
-                    } finally {
-                        oos.close();
-                        socket.close();
-                    }
-
-                    sessionId = sessionIdAux;
-                    // actualitzar UI
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            // actualitzem la resposta del server per poder veure-la en la UI
-                            txvSessionId.setText(sessionId + "");
-                        }
-                    });
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        thread.start();
-    }
-
-    private boolean userLogin() {
-        final Handler handler = new Handler();
+    // S'executa dins d'un THREAD
+    private LoginTuple userLogin() {
         boolean credencialsCorrectes = false;
 
+        LoginTuple loginTuple = null;
+
         String login = edtLogin.getText().toString();
         String password = edtPassword.getText().toString();
 
-        Thread thread = new Thread(new Runnable() {
-            private boolean credencialsCorrectes = false;
+        Socket socket = null;
+        ObjectOutputStream oos = null;
+        ObjectInputStream ois = null;
 
-            @Override
-            public void run() {
-                Socket socket = null;
-                ObjectOutputStream oos = null;
-                ObjectInputStream ois = null;
+        try {
+            socket = new Socket(ServerInfo.SRVIP, ServerInfo.SRVPORT);
+            oos = new ObjectOutputStream(socket.getOutputStream());
+            ois = new ObjectInputStream(socket.getInputStream());
 
-                try {
-                    socket = new Socket(SRVIP, SRVPORT);
-                    oos = new ObjectOutputStream(socket.getOutputStream());
-                    ois = new ObjectInputStream(socket.getInputStream());
-
-                    LoginTuple lt = new LoginTuple(login, password, null); // client inicialment no coneix el seu sessionID
-                    final Long sessionId;
-                    Long sessionIdAux = null;
+            loginTuple = new LoginTuple(login, password, null); // client inicialment no coneix el seu sessionID
+            final Long sessionId;
+            Long sessionIdAux = null;
 
 //                    try {
-                    // enviem logintuple
-                    Log.d("SRV", "enviant missatge");
+            // enviem logintuple
+            Log.d("SRV", "enviant missatge");
 
-                    // Enviem codi d'operació: LOGIN - 1
-                    oos.writeInt(1);
-                    oos.flush();
-                    // llegim ok
-//                        Log.d("SRV", "esperant ok");
-//                        ois.readInt();
+            // Enviem codi d'operació: LOGIN - 1
+            oos.writeInt(CodiOperacio.LOGIN.getNumVal());
+            oos.flush();
 
-                    // Enviarem "tupla" LoginTuple
-                    oos.writeObject(lt);
-                    oos.flush();
-                    Log.d("SRV", "missatge enviat");
-                    // llegim ok
-                    ois.readInt();
+            // Enviarem "tupla" LoginTuple
+            oos.writeObject(loginTuple);
+            oos.flush();
+            Log.d("SRV", "missatge enviat");
+            // llegim ok
+            ois.readInt();
 
 
-                    Log.d("SRV", "esperant resposta del server");
-                    int res = ois.readInt();
-                    Log.d("SRV", "resposta del server REBUDA");
+            Log.d("SRV", "esperant resposta del server");
+            int res = ois.readInt();
+            Log.d("SRV", "resposta del server REBUDA");
 //                        int res = (int)ois.readObject();
 
-                    // si la resposta == OK
-                    if (res == 1) {
-                        credencialsCorrectes = true;
-                        // llegim LoginTuple
-                        lt = (LoginTuple) ois.readObject();
-                        // enviem ok
-                        oos.writeInt(1);
-                        oos.flush();
-                    } else {
-                        // Empleat no consta a la BD o login incorrecte
-                        credencialsCorrectes = false;
-                    }
-
-//                    } catch (IOException | ClassNotFoundException ex) {
-//                        System.out.println(ex);
-//                        System.out.println(ex.getMessage());
-//                        ex.printStackTrace();
-
-
-//                    sessionId = sessionIdAux;
-//                    // actualitzar UI
-//                    handler.post(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            // actualitzem la resposta del server per poder veure-la en la UI
-//                            txvSessionId.setText(sessionId+"");
-//                        }
-//                    });
-
-                } catch (IOException | ClassNotFoundException e) {
-                    e.printStackTrace();
-                    Log.d("SRV", e.getLocalizedMessage());
-                } finally {
-                    try {
-                        oos.close();
-                        socket.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        Log.d("SRV", e.getLocalizedMessage());
-                    }
-                }
+            // si la resposta == OK
+            if (res == 1) {
+                credencialsCorrectes = true;
+                // llegim LoginTuple
+                loginTuple = (LoginTuple) ois.readObject();
+                // enviem ok
+                oos.writeInt(1);
+                oos.flush();
+            } else {
+                // Empleat no consta a la BD o login incorrecte
+                credencialsCorrectes = false;
             }
-
-            public boolean getCredencialsCorrectes(){
-                return credencialsCorrectes;
-            }
-        });
-
-        thread.start();
-        try {
-            thread.join(); // TODO: afegir progressbar
-
-        } catch (InterruptedException e) {
-            Log.d("SRV", e.getLocalizedMessage());
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
+            Log.d("SRV", e.getLocalizedMessage());
+        } finally {
+            try {
+                oos.close();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.d("SRV", e.getLocalizedMessage());
+            }
         }
 
+        return loginTuple;
     }
 
+//            public boolean getCredencialsCorrectes() {
+//                return credencialsCorrectes;
+//            }
+//        });
+//
+//        thread.start();
+//        try {
+//            thread.join(); // TODO: afegir progressbar
+//
+//        } catch (InterruptedException e) {
+//            Log.d("SRV", e.getLocalizedMessage());
+//            e.printStackTrace();
+//        }
 
 }

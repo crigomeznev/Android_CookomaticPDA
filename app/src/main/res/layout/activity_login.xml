@@ -19,11 +19,11 @@
 
         <TextView android:text="Login"></TextView>
 
-        <EditText android:text="alumne" android:id="@+id/edtLogin" />
+        <EditText android:text="pepito" android:id="@+id/edtLogin" />
 
         <TextView android:text="Password"></TextView>
 
-        <EditText android:text="alumne" android:id="@+id/edtPassword" android:inputType="textPassword"></EditText>
+        <EditText android:text="1234" android:id="@+id/edtPassword" android:inputType="textPassword"></EditText>
 
         <TextView android:text="Session id:"></TextView>
         <TextView android:id="@+id/txvSessionId" android:textStyle="bold"></TextView>

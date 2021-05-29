@@ -12,14 +12,17 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.example.cookomaticpda.adapters.ComandaAdapter;
+import com.example.cookomaticpda.adapters.InfoTaulaAdapter;
 import com.example.cookomaticpda.adapters.TaulaAdapter;
 import com.example.cookomaticpda.model.sala.Cambrer;
 import com.example.cookomaticpda.model.sala.Comanda;
-import com.example.cookomaticpda.model.sala.EstatLinia;
-import com.example.cookomaticpda.model.sala.LiniaComanda;
 import com.example.cookomaticpda.model.sala.Taula;
+
+import org.cookomatic.protocol.CodiOperacio;
+import org.cookomatic.protocol.InfoTaula;
+import org.cookomatic.protocol.LoginTuple;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -29,14 +32,27 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
+
+import static com.example.cookomaticpda.ServerInfo.SRVIP;
+import static com.example.cookomaticpda.ServerInfo.SRVPORT;
+
 public class MainActivity extends AppCompatActivity
-    implements TaulaAdapter.OnSelectedItemListener {
+    implements InfoTaulaAdapter.OnSelectedItemListener {
 
     private RecyclerView rcyTaules;
 //    private ComandaAdapter mAdapter;
-    private TaulaAdapter mAdapter;
+    private InfoTaulaAdapter mAdapter;
     private List<Comanda> mComandes;
     private List<Taula> mTaules;
+
+
+    private List<InfoTaula> mInfoTaules;
+
+
+    private LoginTuple loginTuple;
 
     // BORRAR
     private Button btnProva;
@@ -48,17 +64,25 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // TODO: ini comandes de la DB
-        iniTaules();
-        iniComandes();
-
+        // Objectes UI
         rcyTaules = findViewById(R.id.rcyTaules);
 
-//        rcyComandes.setLayoutManager(new LinearLayoutManager(this));
-        rcyTaules.setLayoutManager(new GridLayoutManager(this,3)); // 3 columnes
-//        mAdapter = new ComandaAdapter(this, mComandes);
-        mAdapter = new TaulaAdapter(this, mTaules);
-        rcyTaules.setAdapter(mAdapter);
+        //---------------------------------
+        // recuperar el paràmetre loginTuple:
+        Intent i = getIntent();
+        loginTuple = (LoginTuple) i.getSerializableExtra("loginTuple");
+        Log.d("INTENT","logintuple recuperat: "+loginTuple.getUser()+"/"+loginTuple.getPassword()+" SID:"+loginTuple.getSessionId());
+
+        mInfoTaules = new ArrayList<>();
+        recuperarInfoTaules();
+
+
+
+        // TODO: ini comandes de la DB
+//        iniTaules();
+//        iniComandes();
+
+
 
 
 
@@ -75,6 +99,103 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
+
+    private void recuperarInfoTaules() {
+        // Crida assíncrona per enviar credencials al servidor
+        Observable.fromCallable(() -> {
+            //---------------- START OF THREAD ------------------------------------
+            // Això és el codi que s'executarà en un fil
+            List<InfoTaula> infoTaules = new ArrayList<>();
+            infoTaules = getTaules();
+            return infoTaules;
+            //--------------- END OF THREAD-------------------------------------
+        })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe((infoTaules) -> {
+                    //-------------  UI THREAD ---------------------------------------
+                    mInfoTaules = infoTaules;
+                    Log.d("GETTAULES","Taules rebudes: "+mInfoTaules);
+
+                    rcyTaules.setLayoutManager(new GridLayoutManager(this,3)); // 3 columnes
+                    mAdapter = new InfoTaulaAdapter(this, mInfoTaules, loginTuple.getUser());
+                    rcyTaules.setAdapter(mAdapter);
+
+
+                    // construir recycler taules
+                    //-------------  END OF UI THREAD ---------------------------------------
+                });
+    }
+
+
+    private List<InfoTaula> getTaules() {
+        Socket socket = null;
+        ObjectOutputStream oos = null;
+        ObjectInputStream ois = null;
+
+        List<InfoTaula> infoTaules = new ArrayList<>();
+        int qt = 0;
+        int res;
+
+        try {
+            socket = new Socket(SRVIP, SRVPORT);
+            oos = new ObjectOutputStream(socket.getOutputStream());
+            ois = new ObjectInputStream(socket.getInputStream());
+
+
+            // Enviem codi d'operació: GETTAULES 2
+            oos.writeInt(CodiOperacio.GET_TAULES.getNumVal());
+            oos.flush();
+
+            // enviem sessionId
+            Log.d("SRV", "enviant logintuple = "+loginTuple.getSessionId());
+//            oos.writeLong(loginTuple.getSessionId());
+            oos.writeObject(loginTuple);
+            oos.flush();
+            Log.d("SRV", "sessionId enviat");
+
+            // llegim resposta del servidor
+            res = ois.readInt();
+            // si resposta == KO, avortem operació
+            if (res == CodiOperacio.KO.getNumVal()){
+                throw new RuntimeException("sessionId erroni, operacio avortada");
+            }
+
+            // Llegim qt de taules que ens enviarà el server
+            Log.d("SRV", "esperant resposta del server");
+            qt = ois.readInt();
+            Log.d("SRV", "resposta del server REBUDA");
+
+            for (int i = 0; i < qt; i++) {
+                // llegim objecte
+                InfoTaula it = (InfoTaula)ois.readObject();
+                Log.d("GETTAULA","taula recuperada: "+it.getNumero()+" "+it.getNomCambrer());
+                infoTaules.add(it);
+
+                // enviem ok
+                oos.write(new byte[1]);
+                oos.flush();
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            Log.d("SRV", e.getLocalizedMessage());
+        } finally {
+            try {
+                oos.close();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.d("SRV", e.getLocalizedMessage());
+            }
+        }
+
+        return infoTaules;
+
+
+
+
+    }
+
 
     private void iniTaules() {
         mTaules = new ArrayList<>();
@@ -182,11 +303,13 @@ public class MainActivity extends AppCompatActivity
 
 
     // Implements Taula.Onselecteditemlistener
-    @Override
-    public void onSelectedItem(Taula seleccionada) {
-        Intent intent = new Intent(getApplicationContext(), PresaComandaActivity.class);
-        startActivityForResult(intent,1);
-    }
+//    @Override
+//    public void onSelectedItem(Taula seleccionada) {
+//        Intent intent = new Intent(getApplicationContext(), PresaComandaActivity.class);
+//        startActivityForResult(intent,1);
+//    }
+
+    // Implements InfoTaula.Onselecteditemlistener
 
 
     // Quan tornem de l'altra activity cap aquesta
@@ -195,5 +318,12 @@ public class MainActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Log.d("INTENTS", "Hem tornat a la MainActivity");
+    }
+
+    @Override
+    public void onSelectedInfoTaula(InfoTaula seleccionada) {
+        Intent intent = new Intent(getApplicationContext(), PresaComandaActivity.class);
+        intent.putExtra("loginTuple", loginTuple);
+        startActivityForResult(intent,1);
     }
 }
