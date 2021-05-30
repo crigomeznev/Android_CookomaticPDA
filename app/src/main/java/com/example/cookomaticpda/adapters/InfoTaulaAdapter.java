@@ -4,6 +4,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -62,6 +63,14 @@ public class InfoTaulaAdapter extends RecyclerView.Adapter<InfoTaulaAdapter.View
         } else {
             holder.txvCambrer.setText("BUIDA");
         }
+
+        if (getItemViewType(position) == TIPUS_PROPIA){
+            float percentatge = ((float)it.getPlatsPreparats() / it.getPlatsTotals()) *100;
+            holder.pgbPlats.setProgress((int)percentatge);
+            Log.d("ITADAPTER","taula="+it.getNumero()+"percentatge = "+percentatge+", preparats="+it.getPlatsPreparats()+", totals="+it.getPlatsTotals());
+
+
+        }
     }
 
     // Afegit per diferenciar entre taula amb comanda d'altri,
@@ -96,11 +105,13 @@ public class InfoTaulaAdapter extends RecyclerView.Adapter<InfoTaulaAdapter.View
     public class ViewHolder extends RecyclerView.ViewHolder {
         public TextView txvNumTaula;
         public TextView txvCambrer;
+        public ProgressBar pgbPlats;
 
         public ViewHolder(@NonNull View taulaView) {
             super(taulaView);
             txvNumTaula = taulaView.findViewById(R.id.txvNumTaula);
             txvCambrer = taulaView.findViewById(R.id.txvCambrer);
+            pgbPlats = taulaView.findViewById(R.id.pgbPlats);
 
             taulaView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -117,7 +128,16 @@ public class InfoTaulaAdapter extends RecyclerView.Adapter<InfoTaulaAdapter.View
                     }
                 }
             });
-            // TODO: set on long click listener
+
+            taulaView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    if (mListener != null) {
+                        mListener.buidarTaula(mInfoTaules.get(getAdapterPosition()));
+                    }
+                    return true;
+                }
+            });
         }
     }
 
@@ -126,5 +146,6 @@ public class InfoTaulaAdapter extends RecyclerView.Adapter<InfoTaulaAdapter.View
     // On selected listener
     public static interface OnSelectedItemListener {
         void onSelectedInfoTaula(InfoTaula seleccionada);
+        void buidarTaula(InfoTaula seleccionada);
     }
 }

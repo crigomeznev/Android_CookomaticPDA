@@ -19,6 +19,7 @@ import com.example.cookomaticpda.adapters.InfoTaulaAdapter;
 import com.example.cookomaticpda.adapters.TaulaAdapter;
 
 import org.cookomatic.protocol.CodiOperacio;
+import org.cookomatic.protocol.CreateComandaTuple;
 import org.cookomatic.protocol.InfoTaula;
 import org.cookomatic.protocol.LoginTuple;
 import org.milaifontanals.cookomatic.model.sala.Cambrer;
@@ -41,10 +42,10 @@ import static com.example.cookomaticpda.ServerInfo.SRVIP;
 import static com.example.cookomaticpda.ServerInfo.SRVPORT;
 
 public class MainActivity extends AppCompatActivity
-    implements InfoTaulaAdapter.OnSelectedItemListener {
+        implements InfoTaulaAdapter.OnSelectedItemListener {
 
     private RecyclerView rcyTaules;
-//    private ComandaAdapter mAdapter;
+    //    private ComandaAdapter mAdapter;
     private InfoTaulaAdapter mAdapter;
     private List<Comanda> mComandes;
     private List<Taula> mTaules;
@@ -57,10 +58,9 @@ public class MainActivity extends AppCompatActivity
 
     private Taula taulaSeleccionada;
 
-    // BORRAR
-    private Button btnProva;
-    private TextView txvServer;
+    private Handler thRefrescaPantalla;
 
+    private int millisegons = 3000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,34 +74,66 @@ public class MainActivity extends AppCompatActivity
         // recuperar el paràmetre loginTuple:
         Intent i = getIntent();
         loginTuple = (LoginTuple) i.getSerializableExtra("loginTuple");
-        Log.d("INTENT","logintuple recuperat: "+loginTuple.getCambrer().getUser()+"/"+loginTuple.getCambrer().getPassword()+" SID:"+loginTuple.getSessionId());
+        Log.d("INTENT", "logintuple recuperat: " + loginTuple.getCambrer().getUser() + "/" + loginTuple.getCambrer().getPassword() + " SID:" + loginTuple.getSessionId());
 
         mInfoTaules = new ArrayList<>();
-        recuperarInfoTaules();
+//        recuperarInfoTaules();
+
+        // ini recycler view
+        rcyTaules.setLayoutManager(new GridLayoutManager(this, 3)); // 3 columnes
 
 
-
-        // TODO: ini comandes de la DB
-//        iniTaules();
-//        iniComandes();
-
-
-
-
-
-        //BORRAR
-        txvServer = findViewById(R.id.txvServer);
-        btnProva = findViewById(R.id.btnProva);
-        btnProva.setOnClickListener(new View.OnClickListener() {
-            // Prova de connexió amb el servidor
-            @Override
-            public void onClick(View v) {
-//                sendMessage(txvServer.getText().toString());
-//                sendMessage("HOLA MUNDO");
-
-            }
-        });
+        // Refrescar la pantalla cada x segons
+        thRefrescaPantalla = new Handler();
+        iniciaRefrescaPantalla();
+//        refrescarPantalla(500);
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        aturaRefrescaPantalla();
+    }
+
+    private void iniciaRefrescaPantalla() {
+        refrescadorPantalla.run();
+    }
+
+    private void aturaRefrescaPantalla() {
+        thRefrescaPantalla.removeCallbacks(refrescadorPantalla);
+    }
+
+//    // Refrescar la pantalla cada x segons
+//    private void refrescarPantalla(int millisegons) {
+//        final Handler handler = new Handler();
+//        final Runnable runnable = new Runnable() {
+//            @Override
+//            public void run() {
+//                Log.d("REFRESH", "refrescant pantalla");
+//                recuperarInfoTaules();
+//                Log.d("REFRESH", "pantalla refrescada");
+//                Toast.makeText(getApplicationContext(),"Pantalla actualitzada",Toast.LENGTH_SHORT).show();
+//            }
+//        };
+//        handler.postDelayed(runnable, millisegons);
+//    }
+
+    // Refrescar la pantalla cada x segons
+    Runnable refrescadorPantalla = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                Toast.makeText(getApplicationContext(), "Actualitzant pantalla", Toast.LENGTH_SHORT).show();
+                Log.d("REFRESH", "Actualitzant pantalla");
+                recuperarInfoTaules();
+            } finally {
+                // 100% guarantee that this always happens, even if
+                // your update method throws an exception
+                thRefrescaPantalla.postDelayed(refrescadorPantalla, millisegons);
+            }
+        }
+    };
+
 
     private void recuperarInfoTaules() {
         // Crida assíncrona per enviar credencials al servidor
@@ -117,10 +149,12 @@ public class MainActivity extends AppCompatActivity
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe((infoTaules) -> {
                     //-------------  UI THREAD ---------------------------------------
+                    mInfoTaules.clear();
                     mInfoTaules = infoTaules;
-                    Log.d("GETTAULES","Taules rebudes: "+mInfoTaules);
+                    Log.d("GETTAULES", "Taules rebudes: " + mInfoTaules);
 
-                    rcyTaules.setLayoutManager(new GridLayoutManager(this,3)); // 3 columnes
+                    // no va
+//                    mAdapter.notifyDataSetChanged(); // TODO: canviar per algo mes eficient
                     mAdapter = new InfoTaulaAdapter(this, mInfoTaules, loginTuple.getCambrer().getUser());
                     rcyTaules.setAdapter(mAdapter);
 
@@ -151,7 +185,7 @@ public class MainActivity extends AppCompatActivity
             oos.flush();
 
             // enviem sessionId
-            Log.d("SRV", "enviant logintuple = "+loginTuple.getSessionId());
+            Log.d("SRV", "enviant logintuple = " + loginTuple.getSessionId());
 //            oos.writeLong(loginTuple.getSessionId());
             oos.writeObject(loginTuple);
             oos.flush();
@@ -160,7 +194,7 @@ public class MainActivity extends AppCompatActivity
             // llegim resposta del servidor
             res = ois.readInt();
             // si resposta == KO, avortem operació
-            if (res == CodiOperacio.KO.getNumVal()){
+            if (res == CodiOperacio.KO.getNumVal()) {
                 throw new RuntimeException("sessionId erroni, operacio avortada");
             }
 
@@ -171,8 +205,8 @@ public class MainActivity extends AppCompatActivity
 
             for (int i = 0; i < qt; i++) {
                 // llegim objecte
-                InfoTaula it = (InfoTaula)ois.readObject();
-                Log.d("GETTAULA","taula recuperada: "+it.getNumero()+" "+it.getNomCambrer());
+                InfoTaula it = (InfoTaula) ois.readObject();
+                Log.d("GETTAULA", "taula recuperada: " + it.getNumero() + " " + it.getNomCambrer());
                 infoTaules.add(it);
 
                 // enviem ok
@@ -193,8 +227,6 @@ public class MainActivity extends AppCompatActivity
         }
 
         return infoTaules;
-
-
 
 
     }
@@ -262,80 +294,6 @@ public class MainActivity extends AppCompatActivity
         return taulaSeleccionada;
     }
 
-    private void iniTaules() {
-        mTaules = new ArrayList<>();
-
-        for (int i = 0; i < 5; i++) {
-            mTaules.add(new Taula(i+1));
-        }
-    }
-
-    private void sendMessage(final String msg) {
-
-        final Handler handler = new Handler();
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                try {
-                    //Replace below IP with the IP of that device in which server socket open.
-                    //If you change port then change the port number in the server side code also.
-//                    Socket s = new Socket("xxx.xxx.xxx.xxx", 9002);
-//                    Socket s = new Socket("10.132.0.115", 9876);
-                    Socket socket = new Socket("192.168.1.108", 9876);
-                    // aquí han d'anar ip i port del servidor (que sempre seran FIXES!)
-
-                    // obtenim "la pipe" del socket per on ens comunicarem amb l'altre extrem
-//                    OutputStream out = socket.getOutputStream();
-                    ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-
-                    oos.writeObject(msg);
-                    oos.flush();
-//                    PrintWriter output = new PrintWriter(out);
-//
-//                    output.println(msg);
-//                    output.flush();
-//                    BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-//                    final String st = input.readLine();
-                    ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-                    String stAux ="";
-                    try {
-                        stAux = (String)ois.readObject();
-                    } catch (ClassNotFoundException e) {
-                        Log.d("SRV", "ERROR: "+e.getMessage());
-                        e.printStackTrace();
-                    }
-                    final String st = stAux;
-
-                    // enviem OK
-//                    oos.write(new byte[1]);
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            // actualitzem la resposta del server per poder veure-la en la UI
-                            String s = txvServer.getText().toString();
-//                            String s = "Hola mundo";
-
-                            Log.d("SRV", "srv response = "+st);
-
-                            if (st.trim().length() != 0)
-                                txvServer.setText(s + "\nFrom Server : " + st);
-                        }
-                    });
-
-                    oos.close();
-//                    output.close();
-//                    out.close();
-                    socket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        thread.start();
-    }
-
 
     // Quan tornem de l'altra activity cap aquesta
     @Override
@@ -343,14 +301,15 @@ public class MainActivity extends AppCompatActivity
         super.onActivityResult(requestCode, resultCode, data);
         Log.d("INTENTS", "Hem tornat a la MainActivity");
 
-        if (resultCode == Activity.RESULT_OK)
-        {
+        if (resultCode == Activity.RESULT_OK) {
             // recarregar taules amb noves dades de les comandes
             Toast.makeText(getApplicationContext(), "INSERT de la comanda amb ÈXIT", Toast.LENGTH_SHORT).show();
-            recuperarInfoTaules();
-        } else if (resultCode == Activity.RESULT_CANCELED){
-            Toast.makeText(getApplicationContext(),"No s'ha pogut fer insert de la comanda", Toast.LENGTH_SHORT).show();
+
+//            recuperarInfoTaules();
+        } else if (resultCode == Activity.RESULT_CANCELED) {
+            Toast.makeText(getApplicationContext(), "No s'ha pogut fer insert de la comanda", Toast.LENGTH_SHORT).show();
         }
+        iniciaRefrescaPantalla();
     }
 
     @Override
@@ -369,9 +328,12 @@ public class MainActivity extends AppCompatActivity
                 .subscribe((taulaSeleccionada) -> {
                     //-------------  UI THREAD ---------------------------------------
                     this.taulaSeleccionada = taulaSeleccionada;
-                    Log.d("getTaulaSeleccionada","Taula seleccionada: "+taulaSeleccionada);
+                    Log.d("getTaulaSeleccionada", "Taula seleccionada: " + taulaSeleccionada);
 
                     if (this.taulaSeleccionada != null) {
+                        // aturem thread "refrescador"
+                        aturaRefrescaPantalla();
+
                         Intent intent = new Intent(getApplicationContext(), PresaComandaActivity.class);
                         intent.putExtra("loginTuple", loginTuple);
 //                    intent.putExtra("numTaula", seleccionada.getNumero()); // nomes passem el numero de la taula seleccionada
@@ -384,4 +346,95 @@ public class MainActivity extends AppCompatActivity
                     //-------------  END OF UI THREAD ---------------------------------------
                 });
     }
+
+    @Override
+    public void buidarTaula(InfoTaula seleccionada) {
+        // Seleccionem registre de la taula seleccionada
+        // Crida assíncrona per enviar credencials al servidor
+        Observable.fromCallable(() -> {
+            //---------------- START OF THREAD ------------------------------------
+            // Això és el codi que s'executarà en un fil
+            return finalitzarComandaDeTaula(seleccionada);
+            //--------------- END OF THREAD-------------------------------------
+        })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe((resultat) -> {
+                    //-------------  UI THREAD ---------------------------------------
+
+                    // if resultat == -1: ERROR, 0 == tot bé
+                    if (resultat == 0) {
+                        Toast.makeText(getApplicationContext(), "Taula buidada amb èxit", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Error en buidar taula", Toast.LENGTH_LONG).show();
+                    }
+                    //-------------  END OF UI THREAD ---------------------------------------
+                });
+    }
+
+
+    // FUNCIONS D'INTERACCIÓ AMB EL SERVIDOR
+    private int finalitzarComandaDeTaula(InfoTaula infoTaula) {
+        if (infoTaula == null) {
+            Log.d("finComandaTaula", "infoTaula és null");
+            return -1;
+        }
+
+        Socket socket = null;
+        ObjectOutputStream oos = null;
+        ObjectInputStream ois = null;
+
+        int res = 0;
+        Long codiNovaComanda = null;
+
+        try {
+            socket = new Socket(SRVIP, SRVPORT);
+            oos = new ObjectOutputStream(socket.getOutputStream());
+            ois = new ObjectInputStream(socket.getInputStream());
+
+            // Enviem codi d'operació: GETTAULES 2
+            oos.writeInt(CodiOperacio.BUIDAR_TAULA.getNumVal());
+            oos.flush();
+
+            // enviem sessionId
+            Log.d("createComanda", "enviant logintuple = " + loginTuple.getSessionId());
+//            oos.writeLong(loginTuple.getSessionId());
+            oos.writeObject(loginTuple);
+            oos.flush();
+            Log.d("createComanda", "sessionId enviat");
+
+            // llegim resposta del servidor
+            res = ois.readInt();
+            // si resposta == KO, avortem operació
+            if (res == CodiOperacio.KO.getNumVal()) {
+                throw new RuntimeException("sessionId erroni, operacio avortada");
+            }
+
+            // Enviem infoTaula
+            oos.writeObject(infoTaula);
+            oos.flush();
+
+            // llegim resposta del servidor
+            res = ois.readInt();
+            // si resposta == KO, avortem operació
+            if (res == CodiOperacio.KO.getNumVal()) {
+                throw new RuntimeException("no s'ha pogut buidar taula, operacio avortada");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d("SRV", e.getLocalizedMessage());
+        } finally {
+            try {
+                oos.close();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.d("SRV", e.getLocalizedMessage());
+            }
+        }
+        return res;
+    }
+
+
 }
