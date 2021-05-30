@@ -6,8 +6,15 @@
     android:background="@color/light_blue"
     android:layout_margin="10dp">
 
+<!--    <TextView-->
+<!--        android:id="@+id/txvNum"-->
+<!--        android:layout_width="0dp"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_weight="1"-->
+<!--        android:text="1"-->
+<!--        android:textColor="@color/black"></TextView>-->
     <TextView
-        android:id="@+id/txvNum"
+        android:id="@+id/txvQuantitat"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
@@ -24,6 +31,15 @@
 
     <TextView
         android:id="@+id/txvPreuPlat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="25,00€"
+        android:textStyle="bold"
+        android:textColor="@color/black"></TextView>
+
+    <TextView
+        android:id="@+id/txvSubtotal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"

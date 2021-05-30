@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -54,6 +55,8 @@ public class MainActivity extends AppCompatActivity
 
     private LoginTuple loginTuple;
 
+    private Taula taulaSeleccionada;
+
     // BORRAR
     private Button btnProva;
     private TextView txvServer;
@@ -71,7 +74,7 @@ public class MainActivity extends AppCompatActivity
         // recuperar el paràmetre loginTuple:
         Intent i = getIntent();
         loginTuple = (LoginTuple) i.getSerializableExtra("loginTuple");
-        Log.d("INTENT","logintuple recuperat: "+loginTuple.getUser()+"/"+loginTuple.getPassword()+" SID:"+loginTuple.getSessionId());
+        Log.d("INTENT","logintuple recuperat: "+loginTuple.getCambrer().getUser()+"/"+loginTuple.getCambrer().getPassword()+" SID:"+loginTuple.getSessionId());
 
         mInfoTaules = new ArrayList<>();
         recuperarInfoTaules();
@@ -118,7 +121,7 @@ public class MainActivity extends AppCompatActivity
                     Log.d("GETTAULES","Taules rebudes: "+mInfoTaules);
 
                     rcyTaules.setLayoutManager(new GridLayoutManager(this,3)); // 3 columnes
-                    mAdapter = new InfoTaulaAdapter(this, mInfoTaules, loginTuple.getUser());
+                    mAdapter = new InfoTaulaAdapter(this, mInfoTaules, loginTuple.getCambrer().getUser());
                     rcyTaules.setAdapter(mAdapter);
 
 
@@ -196,6 +199,68 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    private Taula getTaulaSeleccionada(int numeroTaula) {
+        Socket socket = null;
+        ObjectOutputStream oos = null;
+        ObjectInputStream ois = null;
+        int res;
+
+        Taula taulaSeleccionada = null;
+
+        try {
+            socket = new Socket(SRVIP, SRVPORT);
+            oos = new ObjectOutputStream(socket.getOutputStream());
+            ois = new ObjectInputStream(socket.getInputStream());
+
+
+            // Enviem codi d'operació: GETTAULES 2
+            oos.writeInt(CodiOperacio.GET_TAULA_SELECCIONADA.getNumVal());
+            oos.flush();
+
+            // enviem sessionId
+            Log.d("SRV", "enviant logintuple = " + loginTuple.getSessionId());
+//            oos.writeLong(loginTuple.getSessionId());
+            oos.writeObject(loginTuple);
+            oos.flush();
+            Log.d("SRV", "sessionId enviat");
+
+            // llegim resposta del servidor
+            res = ois.readInt();
+            // si resposta == KO, avortem operació
+            if (res == CodiOperacio.KO.getNumVal()) {
+                throw new RuntimeException("sessionId erroni, operacio avortada");
+            }
+
+            // enviem numero taula
+            oos.writeInt(numeroTaula);
+            oos.flush();
+
+            // llegim resposta del servidor
+            res = ois.readInt();
+            // si resposta == KO, avortem operació
+            if (res == CodiOperacio.KO.getNumVal()) {
+                throw new RuntimeException("taula no trobada, operacio avortada");
+            }
+
+            // Si OK, llegim taula
+            taulaSeleccionada = (Taula) ois.readObject();
+            // enviem ok
+            oos.write(new byte[1]);
+            oos.flush();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d("SRV", e.getLocalizedMessage());
+        } finally {
+            try {
+                oos.close();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.d("SRV", e.getLocalizedMessage());
+            }
+        }
+        return taulaSeleccionada;
+    }
 
     private void iniTaules() {
         mTaules = new ArrayList<>();
@@ -272,58 +337,51 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-
-    private void iniComandes() {
-        mComandes = new ArrayList<>();
-
-        Cambrer cambrer = new Cambrer(1,"pepito","pepez","","pepito","pepito");
-
-        for (int i = 0; i < 5; i++) {
-            Comanda com = new Comanda(i+1, new Date(), mTaules.get(i).getNumero(), cambrer, false);
-
-//            for (int j = 0; j < 4; j++) {
-//                com.addLinia(new LiniaComanda(j+1, j+2, EstatLinia.EN_PREPARACIO));
-//            }
-            if (i%2==0)
-                com.setFinalitzada(true);
-            mComandes.add(com);
-        }
-
-//        mComandes.add();
-//        mComandes.add(new Comanda(1, new Date(), 1,
-//                new Cambrer(1,"pepito","pepez","","pepito","pepito")));
-//        mComandes.add(new Comanda(1, new Date(), 1,
-//                new Cambrer(1,"pepito","pepez","","pepito","pepito")));
-//        mComandes.add(new Comanda(1, new Date(), 1,
-//                new Cambrer(1,"pepito","pepez","","pepito","pepito")));
-
-
-        Log.d("TAULA","comandes = "+mComandes);
-    }
-
-
-    // Implements Taula.Onselecteditemlistener
-//    @Override
-//    public void onSelectedItem(Taula seleccionada) {
-//        Intent intent = new Intent(getApplicationContext(), PresaComandaActivity.class);
-//        startActivityForResult(intent,1);
-//    }
-
-    // Implements InfoTaula.Onselecteditemlistener
-
-
     // Quan tornem de l'altra activity cap aquesta
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Log.d("INTENTS", "Hem tornat a la MainActivity");
+
+        if (resultCode == Activity.RESULT_OK)
+        {
+            // recarregar taules amb noves dades de les comandes
+            Toast.makeText(getApplicationContext(), "INSERT de la comanda amb ÈXIT", Toast.LENGTH_SHORT).show();
+            recuperarInfoTaules();
+        } else if (resultCode == Activity.RESULT_CANCELED){
+            Toast.makeText(getApplicationContext(),"No s'ha pogut fer insert de la comanda", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
     public void onSelectedInfoTaula(InfoTaula seleccionada) {
-        Intent intent = new Intent(getApplicationContext(), PresaComandaActivity.class);
-        intent.putExtra("loginTuple", loginTuple);
-        startActivityForResult(intent,1);
+        // Seleccionem registre de la taula seleccionada
+        // Crida assíncrona per enviar credencials al servidor
+        Observable.fromCallable(() -> {
+            //---------------- START OF THREAD ------------------------------------
+            // Això és el codi que s'executarà en un fil
+            taulaSeleccionada = getTaulaSeleccionada(seleccionada.getNumero());
+            return taulaSeleccionada;
+            //--------------- END OF THREAD-------------------------------------
+        })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe((taulaSeleccionada) -> {
+                    //-------------  UI THREAD ---------------------------------------
+                    this.taulaSeleccionada = taulaSeleccionada;
+                    Log.d("getTaulaSeleccionada","Taula seleccionada: "+taulaSeleccionada);
+
+                    if (this.taulaSeleccionada != null) {
+                        Intent intent = new Intent(getApplicationContext(), PresaComandaActivity.class);
+                        intent.putExtra("loginTuple", loginTuple);
+//                    intent.putExtra("numTaula", seleccionada.getNumero()); // nomes passem el numero de la taula seleccionada
+                        intent.putExtra("taulaSeleccionada", taulaSeleccionada); // nomes passem el numero de la taula seleccionada
+                        startActivityForResult(intent, 1);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "ERROR: Taula no trobada en la BD", Toast.LENGTH_LONG).show();
+                    }
+
+                    //-------------  END OF UI THREAD ---------------------------------------
+                });
     }
 }

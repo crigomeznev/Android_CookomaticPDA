@@ -6,12 +6,14 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
+import android.content.ContentProviderClient;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.example.cookomaticpda.adapters.CategoriaAdapter;
 import com.example.cookomaticpda.adapters.InfoTaulaAdapter;
@@ -20,6 +22,7 @@ import com.example.cookomaticpda.adapters.PlatAdapter;
 import com.example.cookomaticpda.adapters.TaulaAdapter;
 
 import org.cookomatic.protocol.CodiOperacio;
+import org.cookomatic.protocol.CreateComandaTuple;
 import org.cookomatic.protocol.InfoTaula;
 import org.cookomatic.protocol.LoginTuple;
 import org.milaifontanals.cookomatic.model.cuina.Categoria;
@@ -27,6 +30,7 @@ import org.milaifontanals.cookomatic.model.cuina.Plat;
 import org.milaifontanals.cookomatic.model.sala.Comanda;
 import org.milaifontanals.cookomatic.model.sala.EstatLinia;
 import org.milaifontanals.cookomatic.model.sala.LiniaComanda;
+import org.milaifontanals.cookomatic.model.sala.Taula;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -34,8 +38,10 @@ import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
@@ -51,16 +57,19 @@ public class PresaComandaActivity extends AppCompatActivity
     private List<Categoria> mCategories;
     private ArrayList<View> btnsCategories;
 
-    private List<Plat> mPlats;
-    private List<Plat> mPlatsFiltrats;
-    private List<LiniaComanda> mLinies;
-    private Comanda mComanda;
+//    private List<Plat> mPlats = new ArrayList<>();
+    private List<Plat> mPlatsFiltrats = new ArrayList<>();
 
     // TODO: DICCIONARIS DE PLATS, CATEGORIES
-//    private HashMap<Long, >
+    private HashMap<Long, Categoria> hmCategories = new HashMap<>();
+    private HashMap<Long, Plat> hmPlats = new HashMap<>();
+    // suposem màxim 1 línia per plat
+    private HashMap<Long, LiniaComanda> hmLinies = new HashMap<>();
+    private List<LiniaComanda> mLinies = new ArrayList<>(hmLinies.values()); // per omplir el recyclerview
 
 
 
+    private Button btnConfirmar;
     private RecyclerView rcyPlats;
     private RecyclerView rcyLinies;
     private RecyclerView rcyCategories;
@@ -68,6 +77,13 @@ public class PresaComandaActivity extends AppCompatActivity
     private LiniaComandaAdapter lcAdapter;
 
     private LoginTuple loginTuple;
+
+    private Taula mTaula;
+    private int numTaula;
+    private Comanda mComanda;
+
+    private boolean comandaActiva;
+
 //    private PresaComandaActivity mActivity;
 //    private LinearLayout llaContainerButtons;
 
@@ -81,13 +97,22 @@ public class PresaComandaActivity extends AppCompatActivity
         // recuperar el paràmetre loginTuple:
         Intent i = getIntent();
         loginTuple = (LoginTuple) i.getSerializableExtra("loginTuple");
-        Log.d("INTENT","logintuple recuperat: "+loginTuple.getUser()+"/"+loginTuple.getPassword()+" SID:"+loginTuple.getSessionId());
+//        numTaula = i.getIntExtra("numTaula", 0);
+        mTaula = (Taula)i.getSerializableExtra("taulaSeleccionada");
 
-        // TODO: Borrar
-        iniCategories();
-        iniPlats();
-        iniLinies();
+        comandaActiva = mTaula.getComandaActiva()!=null;
+        Log.d("INTENT","logintuple recuperat: "+loginTuple.getCambrer().getUser()+"/"+loginTuple.getCambrer().getPassword()+" SID:"+loginTuple.getSessionId());
+        Log.d("INTENT","comanda activa? = "+comandaActiva);
+        //---------------------------------
 
+        btnConfirmar = findViewById(R.id.btnConfirmar);
+        btnConfirmar.setVisibility(comandaActiva? View.INVISIBLE : View.VISIBLE);
+        btnConfirmar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                inserirComanda();
+            }
+        });
         rcyPlats = findViewById(R.id.rcyPlats);
         rcyLinies = findViewById(R.id.rcyLinies);
         rcyCategories = findViewById(R.id.rcyCategories);
@@ -108,64 +133,8 @@ public class PresaComandaActivity extends AppCompatActivity
     }
 
 
-    // TODO: borrar
-    private void iniCategories() {
-        mCategories = new ArrayList<>();
 
-//        mCategories.add(new Categoria(1, "Entrants", 1));
-//        mCategories.add(new Categoria(2, "Primers", 1));
-//        mCategories.add(new Categoria(3, "Segons", 1));
-//        mCategories.add(new Categoria(4, "Postres", 1));
 
-//        btnsCategories = new ArrayList<>();
-//        for(Categoria c : mCategories){
-//            Button b = new Button(getApplicationContext());
-//            b.setText(c.getNom());
-//            b.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    mPlatsFiltrats.clear();
-//                    for(Plat plat: mPlats){
-//                        if (plat.getCategoria().equals(c)){
-//                            mPlatsFiltrats.add(plat);
-//                        }
-//                    }
-//                    rcyPlats.setLayoutManager(new GridLayoutManager(getApplicationContext(),2)); // 3 columnes
-//                    rcyPlats.setAdapter(new PlatAdapter(null, mActivity, mPlatsFiltrats));
-//                }
-//            });
-//            btnsCategories.add(b);
-//        }
-//
-//        llaContainerButtons.addChildrenForAccessibility(btnsCategories);
-    }
-
-    // TODO: borrar
-    private void iniPlats() {
-        mPlats = new ArrayList<>();
-        mPlatsFiltrats = new ArrayList<>();
-
-//        mPlats.add(new Plat(1, "Patates fregides", "patates fregides", new BigDecimal(2.00),
-//                null, true, mCategories.get(0), null));
-//        mPlats.add(new Plat(1, "Amanida", "Amanida", new BigDecimal(2.00),
-//                null, true, mCategories.get(0), null));
-//        mPlats.add(new Plat(1, "Gaspatxo", "patates fregides", new BigDecimal(2.00),
-//                null, true, mCategories.get(1), null));
-//        mPlats.add(new Plat(1, "Pollastre", "patates fregides", new BigDecimal(2.00),
-//                null, true, mCategories.get(2), null));
-//        mPlats.add(new Plat(1, "Coulant de xocolata", "patates fregides", new BigDecimal(2.00),
-//                null, true, mCategories.get(3), null));
-    }
-
-    // TODO: borrar
-    private void iniLinies() {
-        mLinies = new ArrayList<>();
-
-//        mLinies.add(new LiniaComanda(1, 2, EstatLinia.EN_PREPARACIO, mPlats.get(0)));
-//        mLinies.add(new LiniaComanda(2, 2, EstatLinia.EN_PREPARACIO, mPlats.get(2)));
-//        mLinies.add(new LiniaComanda(3, 3, EstatLinia.EN_PREPARACIO, mPlats.get(4)));
-//        mLinies.add(new LiniaComanda(4, 2, EstatLinia.EN_PREPARACIO, mPlats.get(3)));
-    }
 
 
 
@@ -179,8 +148,12 @@ public class PresaComandaActivity extends AppCompatActivity
 
             getCarta(categories, plats);
 
-            mCategories = categories;
-            mPlats = plats;
+//            mCategories = categories;
+//            mPlats = plats;
+
+            // Poblar hashmaps
+            omplirDiccionaris(categories, plats);
+
 
             return true;
             //--------------- END OF THREAD-------------------------------------
@@ -189,17 +162,33 @@ public class PresaComandaActivity extends AppCompatActivity
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe((infoTaules) -> {
                     //-------------  UI THREAD ---------------------------------------
+                    mCategories = new ArrayList<>(hmCategories.values());
+
                     Log.d("GETCARTA","categories rebudes: "+mCategories);
-                    Log.d("GETCARTA","plats rebudes: "+mPlats);
+                    Log.d("GETCARTA","plats rebudes: "+hmPlats.values());
 
                     rcyCategories.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
                     rcyCategories.setAdapter(new CategoriaAdapter(this, mCategories));
 
                     rcyPlats.setLayoutManager(new GridLayoutManager(this, 2)); // 3 columnes
-                    rcyPlats.setAdapter(new PlatAdapter(this, this, mPlats));
+                    rcyPlats.setAdapter(new PlatAdapter(this, this, mPlatsFiltrats));
                     // construir recycler taules
                     //-------------  END OF UI THREAD ---------------------------------------
                 });
+    }
+
+    private void omplirDiccionaris(List<Categoria> categories, List<Plat> plats) {
+        for(Categoria cat : categories){
+            hmCategories.put(cat.getCodi(), cat);
+        }
+        for(Plat plat : plats){
+            // assignem categoria a la que tenim ja carregada en memòria a partir del codi (diccionari)
+            long codiCategoria = plat.getCategoria().getCodi();
+            plat.setCategoria(hmCategories.get(codiCategoria));
+
+            // ens guardem plat en memòria
+            hmPlats.put(plat.getCodi(), plat);
+        }
     }
 
 
@@ -290,12 +279,120 @@ public class PresaComandaActivity extends AppCompatActivity
     }
 
 
+    private Long createComanda(CreateComandaTuple comandaTuple) {
+        if (comandaTuple == null){
+            Log.d("createComanda","comandatuple és null");
+            return null;
+        }
+
+        Socket socket = null;
+        ObjectOutputStream oos = null;
+        ObjectInputStream ois = null;
+
+        int res;
+        Long codiNovaComanda = null;
+
+        try {
+            socket = new Socket(SRVIP, SRVPORT);
+            oos = new ObjectOutputStream(socket.getOutputStream());
+            ois = new ObjectInputStream(socket.getInputStream());
+
+            // Enviem codi d'operació: GETTAULES 2
+            oos.writeInt(CodiOperacio.CREATE_COMANDA.getNumVal());
+            oos.flush();
+
+            // enviem sessionId
+            Log.d("createComanda", "enviant logintuple = "+loginTuple.getSessionId());
+//            oos.writeLong(loginTuple.getSessionId());
+            oos.writeObject(loginTuple);
+            oos.flush();
+            Log.d("createComanda", "sessionId enviat");
+
+            // llegim resposta del servidor
+            res = ois.readInt();
+            // si resposta == KO, avortem operació
+            if (res == CodiOperacio.KO.getNumVal()){
+                throw new RuntimeException("sessionId erroni, operacio avortada");
+            }
+
+            // Enviem comandaTuple
+            oos.writeObject(comandaTuple);
+            oos.flush();
+
+            // llegim resposta del servidor
+//            res = ois.readInt();
+//            // si resposta == KO, avortem operació
+//            if (res == CodiOperacio.KO.getNumVal()){
+//                throw new RuntimeException("no s'ha pogut inserir nova comanda, operacio avortada");
+//            }
+
+            Log.d("createComanda", "ESPERANT NOU CODI COMANDA");
+            // Recuperem id de nova comanda
+            codiNovaComanda = ois.readLong();
+            Log.d("createComanda", "CODI COMANDA REBUT = "+codiNovaComanda);
+            // enviem ok
+            oos.write(new byte[1]);
+            oos.flush();
+        } catch (Exception  e) {
+            e.printStackTrace();
+            Log.d("SRV", e.getLocalizedMessage());
+        } finally {
+            try {
+                oos.close();
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Log.d("SRV", e.getLocalizedMessage());
+            }
+        }
+        return codiNovaComanda;
+    }
+
+
+    private void inserirComanda() {
+        Log.d("NOVACOMANDA", "inserirComanda");
+        // Crida assíncrona per enviar credencials al servidor
+        Observable.fromCallable(() -> {
+            //---------------- START OF THREAD ------------------------------------
+
+            CreateComandaTuple cct = new CreateComandaTuple(loginTuple.getSessionId(), mTaula, mLinies.size(), mLinies);
+            Log.d("NOVACOMANDA", "fil: creant nova comanda");
+            Long codiNovaComanda = createComanda(cct);
+            Log.d("NOVACOMANDA", "fil: he creat aquesta comanda = "+codiNovaComanda);
+            return codiNovaComanda;
+            //--------------- END OF THREAD-------------------------------------
+        })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe((codiNovaComanda) -> {
+                    //-------------  UI THREAD ---------------------------------------
+                    Log.d("NOVACOMANDA", "fil ha fet la seva feina");
+                    Intent i = getIntent();
+
+                    if (codiNovaComanda == -1)
+                    {
+                        setResult(Activity.RESULT_CANCELED, i);
+                    } else {
+
+                        // insert amb èxit
+                        Log.d("NOVACOMANDA", "comanda inserida amb èxit. codi = " + codiNovaComanda);
+//                        mComanda = new Comanda(codiNovaComanda, null, null, null, false);
+                        setResult(Activity.RESULT_OK, i);
+                    }
+                    // Tornem a activity anterior
+                    // Hem de crear un nou intent per retornar les dades a l'activity anterior.
+//                    i.putExtra(PARAM_OUT_NOM_PERSONATGE, nom);
+                    finish();
+                    // TODO: tornar a l'altra activity
+                    //-------------  END OF UI THREAD ---------------------------------------
+                });
+    }
 
 
     @Override
     public void onSelectedCategoria(Categoria seleccionada) {
         mPlatsFiltrats.clear();
-        for (Plat plat : mPlats) {
+        for (Plat plat : hmPlats.values()) {
             if (plat.getCategoria().equals(seleccionada)) {
                 mPlatsFiltrats.add(plat);
             }
@@ -304,16 +401,49 @@ public class PresaComandaActivity extends AppCompatActivity
         rcyPlats.setAdapter(new PlatAdapter(this, this, mPlatsFiltrats));
     }
 
+
     @Override
-    public void onSelectedPlat(Plat seleccionat) {
+    public void addLiniaItem(Plat item) {
+        if (comandaActiva){
+            Toast.makeText(getApplicationContext(), "No es pot modificar una comanda activa", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         Log.d("LINIA", "AFEGINT LINIA");
-        mLinies.add(new LiniaComanda(mLinies.size() + 1, 1, EstatLinia.EN_PREPARACIO, seleccionat));
+//        LiniaComanda lc = new LiniaComanda(mLinies.size() + 1, 1, EstatLinia.EN_PREPARACIO, item);
 
-        lcAdapter.notifyDataSetChanged();
+        LiniaComanda lc = hmLinies.get(item.getCodi());
+        if (lc == null){
+            lc = new LiniaComanda(mLinies.size() + 1, 1, EstatLinia.EN_PREPARACIO, item);
+            // afegim a hashmap i llista
+            hmLinies.put(lc.getItem().getCodi(), lc);
+            mLinies.add(lc);
+        } else {
+            lc.setQuantitat(lc.getQuantitat()+1);
+        }
 
-//        rcyLinies.setLayoutManager(new LinearLayoutManager(this));
-//        lcAdapter = new LiniaComandaAdapter(this, mLinies);
-//        rcyLinies.setAdapter(lcAdapter);
-        Log.d("LINIA", "LINIES = " + mLinies);
+        lcAdapter.notifyDataSetChanged(); // TODO: canviar per algo mes eficient
+    }
+
+    @Override
+    public void deleteLiniaItem(Plat item) {
+        if (comandaActiva){
+            Toast.makeText(getApplicationContext(), "No es pot modificar una comanda activa", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        LiniaComanda lc = hmLinies.get(item.getCodi());
+        if (lc != null){
+            if (lc.getQuantitat() > 1) {
+                // actualitzem quantitat
+                lc.setQuantitat(lc.getQuantitat()-1);
+
+            } else {
+                // esborrem línia
+                hmLinies.remove(lc.getItem().getCodi());
+                mLinies.remove(lc);
+            }
+            lcAdapter.notifyDataSetChanged(); // TODO: canviar per algo mes eficient
+        }
     }
 }

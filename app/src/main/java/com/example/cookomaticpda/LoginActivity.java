@@ -15,11 +15,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-//import com.example.cookomaticpda.borrar.LoginTuple;
-
 
 import org.cookomatic.protocol.CodiOperacio;
 import org.cookomatic.protocol.LoginTuple;
+import org.milaifontanals.cookomatic.model.sala.Cambrer;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -151,7 +150,8 @@ public class LoginActivity extends AppCompatActivity {
             oos = new ObjectOutputStream(socket.getOutputStream());
             ois = new ObjectInputStream(socket.getInputStream());
 
-            loginTuple = new LoginTuple(login, password, null); // client inicialment no coneix el seu sessionID
+            Cambrer cambrer = new Cambrer(0,"a","a",null,login,password);
+            loginTuple = new LoginTuple(cambrer, null);
             final Long sessionId;
             Long sessionIdAux = null;
 

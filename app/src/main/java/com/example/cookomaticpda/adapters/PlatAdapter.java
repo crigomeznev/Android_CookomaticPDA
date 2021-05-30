@@ -90,13 +90,14 @@ public class PlatAdapter extends RecyclerView.Adapter<PlatAdapter.ViewHolder> {
                     Log.d("Plat","AFEGIR PLAT: "+mPlats.get(getAdapterPosition()));
 //                    mListener.onSelectedItem(mPlats.get(getAdapterPosition()));
 //                    mActivity.afegirPlat(mPlats.get(getAdapterPosition()));
-                    mListener.onSelectedPlat(mPlats.get(getAdapterPosition()));
+                    mListener.addLiniaItem(mPlats.get(getAdapterPosition()));
                 }
             });
             btnTreurePlat.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Log.d("Plat","TREURE PLAT: "+this.toString());
+                    mListener.deleteLiniaItem(mPlats.get(getAdapterPosition()));
                 }
             });
             // TODO: set on long click listener
@@ -109,6 +110,7 @@ public class PlatAdapter extends RecyclerView.Adapter<PlatAdapter.ViewHolder> {
 
     // On selected listener
     public static interface OnSelectedItemListener {
-        void onSelectedPlat(Plat seleccionat);
+        void addLiniaItem(Plat item);
+        void deleteLiniaItem(Plat item);
     }
 }

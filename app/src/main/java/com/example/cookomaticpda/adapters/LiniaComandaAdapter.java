@@ -50,9 +50,10 @@ public class LiniaComandaAdapter extends RecyclerView.Adapter<LiniaComandaAdapte
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         LiniaComanda lc = mLinies.get(position);
 
-        holder.txvNum.setText(lc.getNum()+"");
+        holder.txvQuantitat.setText(lc.getQuantitat()+"");
         holder.txvNomPlat.setText(lc.getItem().getNom());
         holder.txvPreuPlat.setText(lc.getItem().getPreu()+"");
+        holder.txvSubtotal.setText(lc.getImport()+"");
     }
 
 
@@ -63,15 +64,17 @@ public class LiniaComandaAdapter extends RecyclerView.Adapter<LiniaComandaAdapte
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView txvNum;
+        public TextView txvQuantitat;
         public TextView txvNomPlat;
         public TextView txvPreuPlat;
+        public TextView txvSubtotal;
 
         public ViewHolder(@NonNull View platView) {
             super(platView);
-            txvNum = platView.findViewById(R.id.txvNum);
+            txvQuantitat = platView.findViewById(R.id.txvQuantitat);
             txvNomPlat = platView.findViewById(R.id.txvNomPlat);
             txvPreuPlat = platView.findViewById(R.id.txvPreuPlat);
+            txvSubtotal = platView.findViewById(R.id.txvSubtotal);
         }
     }
 
