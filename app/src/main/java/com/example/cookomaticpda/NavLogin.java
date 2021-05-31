@@ -1,23 +1,20 @@
 package com.example.cookomaticpda;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.viewpager.widget.ViewPager;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
+
+import androidx.fragment.app.Fragment;
+
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-
-
-import com.example.cookomaticpda.uiswipe.SectionsPagerAdapter;
 
 import org.cookomatic.protocol.CodiOperacio;
 import org.cookomatic.protocol.LoginTuple;
@@ -32,23 +29,13 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
-public class LoginActivity extends AppCompatActivity {
+/**
+ * A simple {@link Fragment} subclass.
+ * Use the {@link NavLogin#newInstance} factory method to
+ * create an instance of this fragment.
+ */
+public class NavLogin extends Fragment {
 
-    public static int REQUEST_CODE_1 = 1;
-    public static int REQUEST_CODE_2 = 2;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
-        SectionsPagerAdapter sectionsPagerAdapter = new SectionsPagerAdapter(this, getSupportFragmentManager());
-        ViewPager viewPager = findViewById(R.id.view_pager);
-        viewPager.setAdapter(sectionsPagerAdapter);
-    }
-
-
-
-    /*
     private Button btnStart;
     private EditText edtLogin, edtPassword;
     private TextView txvSessionId;
@@ -56,15 +43,43 @@ public class LoginActivity extends AppCompatActivity {
     // Login
     private LoginTuple loginTuple;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
 
-        btnStart = findViewById(R.id.btnStart);
-        edtLogin = findViewById(R.id.edtLogin);
-        edtPassword = findViewById(R.id.edtPassword);
-        txvSessionId = findViewById(R.id.txvSessionId);
+
+    public NavLogin() {
+        // Required empty public constructor
+    }
+
+    /**
+     * Use this factory method to create a new instance of
+     * this fragment using the provided parameters.
+     *
+     * @param param1 Parameter 1.
+     * @param param2 Parameter 2.
+     * @return A new instance of fragment NavLogin.
+     */
+    public static NavLogin newInstance(String param1, String param2) {
+        NavLogin fragment = new NavLogin();
+        Bundle args = new Bundle();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        View root = inflater.inflate(R.layout.fragment_nav_login, container, false);
+
+        btnStart = root.findViewById(R.id.btnStart);
+        edtLogin = root.findViewById(R.id.edtLogin);
+        edtPassword = root.findViewById(R.id.edtPassword);
+//        txvSessionId = root.findViewById(R.id.txvSessionId);
+
 
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -80,7 +95,7 @@ public class LoginActivity extends AppCompatActivity {
                 if (loginSP.isEmpty() || passwordSP.isEmpty()) {
                     // primer login, ens guardem aquestes credencials
                     saveLoginSharedPreferences(login, password);
-                    Toast.makeText(getApplicationContext(), "Login i contrasenya registrats correctament", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Login i contrasenya registrats correctament", Toast.LENGTH_SHORT).show();
 
                 } else {
                     // Crida assíncrona per enviar credencials al servidor
@@ -105,10 +120,10 @@ public class LoginActivity extends AppCompatActivity {
                                 loginTuple = newLoginTuple;
                                 if (loginTuple == null) {
                                     // Login incorrecte (login o contrasenya incorrectes), no deixem entrar
-                                    Toast.makeText(getApplicationContext(), "Login o contrasenya incorrectes, o cambrer no consta en la BD", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getContext(), "Login o contrasenya incorrectes, o cambrer no consta en la BD", Toast.LENGTH_SHORT).show();
                                 } else {
                                     // Login correcte o primer login, deixem entrar
-                                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                                    Intent intent = new Intent(getContext(), MainActivity.class);
                                     // passem loginTuple a l'altra activity
                                     intent.putExtra("loginTuple", loginTuple);
                                     startActivity(intent);
@@ -119,12 +134,13 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        // VEGEU: https://programacionymas.com/series/app-android-sobre-registro-de-inventarios/login-usando-sharedpreferences
+        return root;
     }
 
 
+
     private void saveLoginSharedPreferences(String login, String password) {
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
 
         // Guardar la preferencia
@@ -135,7 +151,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private String getFromSharedPreferences(String key) {
-        SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
 
         String value = sharedPref.getString(key, "");
         // si no troba la propietat, retorna defValue (en aquest cas "")
@@ -216,21 +232,5 @@ public class LoginActivity extends AppCompatActivity {
         return loginTuple;
     }
 
-//            public boolean getCredencialsCorrectes() {
-//                return credencialsCorrectes;
-//            }
-//        });
-//
-//        thread.start();
-//        try {
-//            thread.join(); // TODO: afegir progressbar
-//
-//        } catch (InterruptedException e) {
-//            Log.d("SRV", e.getLocalizedMessage());
-//            e.printStackTrace();
-//        }
-
-
-     */
 
 }
