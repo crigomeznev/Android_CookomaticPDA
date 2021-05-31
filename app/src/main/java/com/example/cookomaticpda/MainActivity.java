@@ -318,7 +318,7 @@ public class MainActivity extends AppCompatActivity
         // Crida assíncrona per enviar credencials al servidor
         Observable.fromCallable(() -> {
             //---------------- START OF THREAD ------------------------------------
-            // Això és el codi que s'executarà en un fil
+            // Hem de recuperar: comanda + linies d'aquesta taula, si en té
             taulaSeleccionada = getTaulaSeleccionada(seleccionada.getNumero());
             return taulaSeleccionada;
             //--------------- END OF THREAD-------------------------------------

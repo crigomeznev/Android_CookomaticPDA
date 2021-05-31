@@ -30,13 +30,6 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 public class LoginActivity extends AppCompatActivity {
-
-    // moure d'aqui
-//    private final String SRVIP = "192.168.1.108";
-//    private final String SRVIP = "192.168.1.105";
-
-
-
     private Button btnStart;
     private EditText edtLogin, edtPassword;
     private TextView txvSessionId;

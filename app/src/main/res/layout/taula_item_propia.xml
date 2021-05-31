@@ -10,11 +10,13 @@
         android:id="@+id/txvNumTaula"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textSize="30dp"
         android:text="1" android:textStyle="bold"></TextView>
     <TextView
         android:id="@+id/txvCambrer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textSize="20dp"
         android:text="Pepito"></TextView>
     <ProgressBar
         android:id="@+id/pgbPlats"

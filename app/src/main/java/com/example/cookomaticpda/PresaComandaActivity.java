@@ -6,24 +6,19 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
-import android.content.ContentProviderClient;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.example.cookomaticpda.adapters.CategoriaAdapter;
-import com.example.cookomaticpda.adapters.InfoTaulaAdapter;
 import com.example.cookomaticpda.adapters.LiniaComandaAdapter;
 import com.example.cookomaticpda.adapters.PlatAdapter;
-import com.example.cookomaticpda.adapters.TaulaAdapter;
 
 import org.cookomatic.protocol.CodiOperacio;
 import org.cookomatic.protocol.CreateComandaTuple;
-import org.cookomatic.protocol.InfoTaula;
 import org.cookomatic.protocol.LoginTuple;
 import org.milaifontanals.cookomatic.model.cuina.Categoria;
 import org.milaifontanals.cookomatic.model.cuina.Plat;
@@ -35,13 +30,11 @@ import org.milaifontanals.cookomatic.model.sala.Taula;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.math.BigDecimal;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
@@ -82,7 +75,7 @@ public class PresaComandaActivity extends AppCompatActivity
     private int numTaula;
     private Comanda mComanda;
 
-    private boolean comandaActiva;
+    private boolean teComandaActiva;
 
 //    private PresaComandaActivity mActivity;
 //    private LinearLayout llaContainerButtons;
@@ -99,14 +92,15 @@ public class PresaComandaActivity extends AppCompatActivity
         loginTuple = (LoginTuple) i.getSerializableExtra("loginTuple");
 //        numTaula = i.getIntExtra("numTaula", 0);
         mTaula = (Taula)i.getSerializableExtra("taulaSeleccionada");
+        mComanda = mTaula.getComandaActiva();
 
-        comandaActiva = mTaula.getComandaActiva()!=null;
+//        teComandaActiva = mTaula.getComandaActiva()!=null;
         Log.d("INTENT","logintuple recuperat: "+loginTuple.getCambrer().getUser()+"/"+loginTuple.getCambrer().getPassword()+" SID:"+loginTuple.getSessionId());
-        Log.d("INTENT","comanda activa? = "+comandaActiva);
+        Log.d("INTENT","comanda activa = "+ mComanda);
         //---------------------------------
 
         btnConfirmar = findViewById(R.id.btnConfirmar);
-        btnConfirmar.setVisibility(comandaActiva? View.INVISIBLE : View.VISIBLE);
+        btnConfirmar.setVisibility(mComanda!=null ? View.INVISIBLE : View.VISIBLE);
         btnConfirmar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -119,6 +113,21 @@ public class PresaComandaActivity extends AppCompatActivity
 
 //        rcyPlats.setLayoutManager(new GridLayoutManager(this, 2)); // 3 columnes
 //        rcyPlats.setAdapter(new PlatAdapter(this, this, mPlatsFiltrats));
+
+        // si la taula té una comanda activa, en mostrarem les linies
+        if (mComanda != null && mComanda.iteLinies()!=null){
+            mLinies.clear();
+            hmLinies.clear();
+
+            Iterator<LiniaComanda> iteLinies = mComanda.iteLinies();
+
+            while(iteLinies.hasNext())
+            {
+                LiniaComanda lc = iteLinies.next();
+                mLinies.add(lc);
+                hmLinies.put(lc.getItem().getCodi(), lc);
+            }
+        }
 
         rcyLinies.setLayoutManager(new LinearLayoutManager(this));
         lcAdapter = new LiniaComandaAdapter(this, mLinies);
@@ -404,7 +413,7 @@ public class PresaComandaActivity extends AppCompatActivity
 
     @Override
     public void addLiniaItem(Plat item) {
-        if (comandaActiva){
+        if (mComanda!=null){
             Toast.makeText(getApplicationContext(), "No es pot modificar una comanda activa", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -427,7 +436,7 @@ public class PresaComandaActivity extends AppCompatActivity
 
     @Override
     public void deleteLiniaItem(Plat item) {
-        if (comandaActiva){
+        if (mComanda!=null){
             Toast.makeText(getApplicationContext(), "No es pot modificar una comanda activa", Toast.LENGTH_SHORT).show();
             return;
         }
