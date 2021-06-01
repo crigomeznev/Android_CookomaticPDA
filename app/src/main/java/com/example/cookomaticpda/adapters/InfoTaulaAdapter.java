@@ -133,7 +133,7 @@ public class InfoTaulaAdapter extends RecyclerView.Adapter<InfoTaulaAdapter.View
                 @Override
                 public boolean onLongClick(View v) {
                     if (mListener != null) {
-                        mListener.buidarTaula(mInfoTaules.get(getAdapterPosition()));
+                        mListener.confirmacioBuidarTaula(mInfoTaules.get(getAdapterPosition()));
                     }
                     return true;
                 }
@@ -146,6 +146,6 @@ public class InfoTaulaAdapter extends RecyclerView.Adapter<InfoTaulaAdapter.View
     // On selected listener
     public static interface OnSelectedItemListener {
         void onSelectedInfoTaula(InfoTaula seleccionada);
-        void buidarTaula(InfoTaula seleccionada);
+        void confirmacioBuidarTaula(InfoTaula seleccionada);
     }
 }

@@ -17,12 +17,15 @@ import com.example.cookomaticpda.R;
 import org.milaifontanals.cookomatic.model.cuina.Plat;
 import org.milaifontanals.cookomatic.model.sala.LiniaComanda;
 
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 
 public class LiniaComandaAdapter extends RecyclerView.Adapter<LiniaComandaAdapter.ViewHolder> {
 
     private Activity mActivity;
     private List<LiniaComanda> mLinies;
+    private NumberFormat nf;
 
     // Diferents colors segons estat de la Plat
 //    private static final int TIPUS_BUIDA = 0;
@@ -33,6 +36,7 @@ public class LiniaComandaAdapter extends RecyclerView.Adapter<LiniaComandaAdapte
     public LiniaComandaAdapter(Activity activity, List<LiniaComanda> linies) {
         mActivity = activity;
         mLinies = linies;
+        nf = NumberFormat.getCurrencyInstance();
 
         Log.d("ADAPTER","linies = "+ mLinies);
     }
@@ -52,8 +56,9 @@ public class LiniaComandaAdapter extends RecyclerView.Adapter<LiniaComandaAdapte
 
         holder.txvQuantitat.setText(lc.getQuantitat()+"");
         holder.txvNomPlat.setText(lc.getItem().getNom());
-        holder.txvPreuPlat.setText(lc.getItem().getPreu()+"");
-        holder.txvSubtotal.setText(lc.getImport()+"");
+        holder.txvPreuPlat.setText(nf.format(lc.getItem().getPreu()));
+        holder.txvSubtotal.setText(nf.format(lc.getImport()));
+
     }
 
 

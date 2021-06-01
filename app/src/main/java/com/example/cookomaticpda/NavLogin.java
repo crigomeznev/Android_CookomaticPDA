@@ -18,9 +18,9 @@ import android.widget.Toast;
 
 import org.cookomatic.protocol.CodiOperacio;
 import org.cookomatic.protocol.LoginTuple;
+import org.milaifontanals.cookomatic.exception.CookomaticException;
 import org.milaifontanals.cookomatic.model.sala.Cambrer;
 
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
@@ -41,7 +41,7 @@ public class NavLogin extends Fragment {
     private TextView txvSessionId;
 
     // Login
-    private LoginTuple loginTuple;
+    private LoginTuple mLoginTuple;
 
 
 
@@ -106,28 +106,51 @@ public class NavLogin extends Fragment {
                         // demanem al server un logintuple que conté session id
                         // si credencials correctes, ens el retorna
                         // altrament, obtenim null
-                        return userLogin();
+                        boolean fallo = false;
+                        LoginTuple loginTuple = null;
+
+                        try{
+                            loginTuple = userLogin();
+                        } catch (CookomaticException ex){
+                            Toast.makeText(getContext(),"Error en fer login", Toast.LENGTH_SHORT);
+                        }
+
+                        mLoginTuple = loginTuple;
+
+                        return mLoginTuple==null; // TODO: NO POT RETORNAR NULL
                         //--------------- END OF THREAD-------------------------------------
                     })
                             .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe((newLoginTuple) -> {
+                            .subscribe((loginTupleNull) -> {
                                 //-------------  UI THREAD ---------------------------------------
                                 // El codi que tenim aquí s'executa només quan el fil
                                 // ha acabat !! A més, aquest codi s'executa en el fil
                                 // d'interfície gràfica.
 //                                setLoading(false); // TODO: progressbar
-                                loginTuple = newLoginTuple;
-                                if (loginTuple == null) {
+                                if (loginTupleNull) {
                                     // Login incorrecte (login o contrasenya incorrectes), no deixem entrar
-                                    Toast.makeText(getContext(), "Login o contrasenya incorrectes, o cambrer no consta en la BD", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(getContext(), "Error: Login o contrasenya incorrectes, cambrer no consta en la BD, o servidor tancat", Toast.LENGTH_SHORT).show();
                                 } else {
                                     // Login correcte o primer login, deixem entrar
                                     Intent intent = new Intent(getContext(), MainActivity.class);
                                     // passem loginTuple a l'altra activity
-                                    intent.putExtra("loginTuple", loginTuple);
+                                    intent.putExtra("loginTuple", mLoginTuple);
                                     startActivity(intent);
                                 }
+
+
+//                                mLoginTuple = newLoginTuple;
+//                                if (mLoginTuple == null) {
+//                                    // Login incorrecte (login o contrasenya incorrectes), no deixem entrar
+//                                    Toast.makeText(getContext(), "Login o contrasenya incorrectes, o cambrer no consta en la BD", Toast.LENGTH_SHORT).show();
+//                                } else {
+//                                    // Login correcte o primer login, deixem entrar
+//                                    Intent intent = new Intent(getContext(), MainActivity.class);
+//                                    // passem loginTuple a l'altra activity
+//                                    intent.putExtra("loginTuple", mLoginTuple);
+//                                    startActivity(intent);
+//                                }
                                 //-------------  END OF UI THREAD ---------------------------------------
                             });
                 }
@@ -216,16 +239,17 @@ public class NavLogin extends Fragment {
                 // Empleat no consta a la BD o login incorrecte
                 credencialsCorrectes = false;
             }
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             Log.d("SRV", e.getLocalizedMessage());
         } finally {
             try {
-                oos.close();
-                socket.close();
-            } catch (IOException e) {
+                if (oos!=null) oos.close();
+                if (socket!=null) socket.close();
+            } catch (Exception e) {
                 e.printStackTrace();
                 Log.d("SRV", e.getLocalizedMessage());
+                throw new CookomaticException("Error en fer login", e);
             }
         }
 

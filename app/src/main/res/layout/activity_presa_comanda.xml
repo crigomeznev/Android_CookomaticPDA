@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     android:id="@+id/frgContainer"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -9,64 +9,79 @@
     tools:context=".PresaComandaActivity"
     android:orientation="horizontal">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:background="@color/burlyWood">
-
-        <TextView
-            android:id="@+id/txvTitolComanda"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:text="Comanda"
-            android:textSize="20dp"
-            android:textStyle="bold"
-            android:fontFamily="serif-monospace"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"></TextView>
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rcyLinies"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/txvTitolComanda"
-            android:layout_margin="10dp"></androidx.recyclerview.widget.RecyclerView>
-
-        <Button
-            android:id="@+id/btnConfirmar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="Confirmar"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"></Button>
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
     <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:background="@color/light_grey">
+        android:id="@+id/llaMain"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rcyCategories"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/black"></androidx.recyclerview.widget.RecyclerView>
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@color/burlyWood"
+            android:orientation="vertical">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rcyPlats"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"></androidx.recyclerview.widget.RecyclerView>
+            <TextView
+                android:id="@+id/txvTitolComanda"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:fontFamily="serif-monospace"
+                android:text="Comanda"
+                android:textSize="20dp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"></TextView>
 
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rcyLinies"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/txvTitolComanda"></androidx.recyclerview.widget.RecyclerView>
+
+            <Button
+                android:id="@+id/btnConfirmar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:text="Confirmar"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"></Button>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@color/light_grey"
+            android:orientation="vertical">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rcyCategories"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/black"></androidx.recyclerview.widget.RecyclerView>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rcyPlats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"></androidx.recyclerview.widget.RecyclerView>
+
+        </LinearLayout>
     </LinearLayout>
 
-</LinearLayout>
+    <ProgressBar
+        android:id="@+id/pgrLoading"
+        style="@style/Widget.AppCompat.ProgressBar"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

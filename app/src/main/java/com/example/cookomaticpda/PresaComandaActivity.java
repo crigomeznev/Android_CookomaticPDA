@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.cookomaticpda.adapters.CategoriaAdapter;
@@ -66,6 +67,7 @@ public class PresaComandaActivity extends AppCompatActivity
     private RecyclerView rcyPlats;
     private RecyclerView rcyLinies;
     private RecyclerView rcyCategories;
+    private ProgressBar pgrLoading;
 
     private LiniaComandaAdapter lcAdapter;
 
@@ -110,7 +112,9 @@ public class PresaComandaActivity extends AppCompatActivity
         rcyPlats = findViewById(R.id.rcyPlats);
         rcyLinies = findViewById(R.id.rcyLinies);
         rcyCategories = findViewById(R.id.rcyCategories);
+        pgrLoading = findViewById(R.id.pgrLoading);
 
+        recuperarCarta();
 //        rcyPlats.setLayoutManager(new GridLayoutManager(this, 2)); // 3 columnes
 //        rcyPlats.setAdapter(new PlatAdapter(this, this, mPlatsFiltrats));
 
@@ -134,7 +138,6 @@ public class PresaComandaActivity extends AppCompatActivity
         rcyLinies.setAdapter(lcAdapter);
 
 
-        recuperarCarta();
 //        rcyCategories.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
 //        rcyCategories.setAdapter(new CategoriaAdapter(this, mCategories));
 
@@ -142,6 +145,9 @@ public class PresaComandaActivity extends AppCompatActivity
     }
 
 
+    private void setLoading(boolean isLoading) {
+        pgrLoading.setVisibility(isLoading? View.VISIBLE:View.INVISIBLE);
+    }
 
 
 
@@ -149,6 +155,7 @@ public class PresaComandaActivity extends AppCompatActivity
 
     private void recuperarCarta() {
         // Crida assíncrona per enviar credencials al servidor
+        setLoading(true);
         Observable.fromCallable(() -> {
             //---------------- START OF THREAD ------------------------------------
             // Això és el codi que s'executarà en un fil
@@ -181,6 +188,8 @@ public class PresaComandaActivity extends AppCompatActivity
 
                     rcyPlats.setLayoutManager(new GridLayoutManager(this, 2)); // 3 columnes
                     rcyPlats.setAdapter(new PlatAdapter(this, this, mPlatsFiltrats));
+
+                    setLoading(false);
                     // construir recycler taules
                     //-------------  END OF UI THREAD ---------------------------------------
                 });
@@ -360,6 +369,7 @@ public class PresaComandaActivity extends AppCompatActivity
 
     private void inserirComanda() {
         Log.d("NOVACOMANDA", "inserirComanda");
+        setLoading(true);
         // Crida assíncrona per enviar credencials al servidor
         Observable.fromCallable(() -> {
             //---------------- START OF THREAD ------------------------------------
@@ -391,6 +401,7 @@ public class PresaComandaActivity extends AppCompatActivity
                     // Tornem a activity anterior
                     // Hem de crear un nou intent per retornar les dades a l'activity anterior.
 //                    i.putExtra(PARAM_OUT_NOM_PERSONATGE, nom);
+                    setLoading(false);
                     finish();
                     // TODO: tornar a l'altra activity
                     //-------------  END OF UI THREAD ---------------------------------------

@@ -6,12 +6,15 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,7 +47,10 @@ import static com.example.cookomaticpda.ServerInfo.SRVPORT;
 public class MainActivity extends AppCompatActivity
         implements InfoTaulaAdapter.OnSelectedItemListener {
 
+    // UI
     private RecyclerView rcyTaules;
+    private ProgressBar pgrLoading;
+
     //    private ComandaAdapter mAdapter;
     private InfoTaulaAdapter mAdapter;
     private List<Comanda> mComandes;
@@ -69,6 +75,7 @@ public class MainActivity extends AppCompatActivity
 
         // Objectes UI
         rcyTaules = findViewById(R.id.rcyTaules);
+        pgrLoading = findViewById(R.id.pgrLoading);
 
         //---------------------------------
         // recuperar el paràmetre loginTuple:
@@ -89,6 +96,8 @@ public class MainActivity extends AppCompatActivity
 //        refrescarPantalla(500);
     }
 
+    //--------------------------------------------------------------------------------------------------
+    // Fil que va actualitzant taules de la BD
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -103,27 +112,11 @@ public class MainActivity extends AppCompatActivity
         thRefrescaPantalla.removeCallbacks(refrescadorPantalla);
     }
 
-//    // Refrescar la pantalla cada x segons
-//    private void refrescarPantalla(int millisegons) {
-//        final Handler handler = new Handler();
-//        final Runnable runnable = new Runnable() {
-//            @Override
-//            public void run() {
-//                Log.d("REFRESH", "refrescant pantalla");
-//                recuperarInfoTaules();
-//                Log.d("REFRESH", "pantalla refrescada");
-//                Toast.makeText(getApplicationContext(),"Pantalla actualitzada",Toast.LENGTH_SHORT).show();
-//            }
-//        };
-//        handler.postDelayed(runnable, millisegons);
-//    }
-
     // Refrescar la pantalla cada x segons
     Runnable refrescadorPantalla = new Runnable() {
         @Override
         public void run() {
             try {
-                Toast.makeText(getApplicationContext(), "Actualitzant pantalla", Toast.LENGTH_SHORT).show();
                 Log.d("REFRESH", "Actualitzant pantalla");
                 recuperarInfoTaules();
             } finally {
@@ -134,6 +127,14 @@ public class MainActivity extends AppCompatActivity
         }
     };
 
+    //--------------------------------------------------------------------------------------------------
+    // UI
+    private void setLoading(boolean isLoading) {
+        pgrLoading.setVisibility(isLoading? View.VISIBLE:View.INVISIBLE);
+    }
+
+
+
 
     private void recuperarInfoTaules() {
         // Crida assíncrona per enviar credencials al servidor
@@ -141,7 +142,12 @@ public class MainActivity extends AppCompatActivity
             //---------------- START OF THREAD ------------------------------------
             // Això és el codi que s'executarà en un fil
             List<InfoTaula> infoTaules = new ArrayList<>();
-            infoTaules = getTaules();
+            try {
+                infoTaules = getTaules(); // TODO: try-catch
+            } catch(Exception e){
+                Log.d("INFOTAULES", "Error en recuperar info taules: "+e.getMessage(), e);
+            }
+
             return infoTaules;
             //--------------- END OF THREAD-------------------------------------
         })
@@ -151,15 +157,11 @@ public class MainActivity extends AppCompatActivity
                     //-------------  UI THREAD ---------------------------------------
                     mInfoTaules.clear();
                     mInfoTaules = infoTaules;
-                    Log.d("GETTAULES", "Taules rebudes: " + mInfoTaules);
 
                     // no va
 //                    mAdapter.notifyDataSetChanged(); // TODO: canviar per algo mes eficient
                     mAdapter = new InfoTaulaAdapter(this, mInfoTaules, loginTuple.getCambrer().getUser());
                     rcyTaules.setAdapter(mAdapter);
-
-
-                    // construir recycler taules
                     //-------------  END OF UI THREAD ---------------------------------------
                 });
     }
@@ -185,11 +187,11 @@ public class MainActivity extends AppCompatActivity
             oos.flush();
 
             // enviem sessionId
-            Log.d("SRV", "enviant logintuple = " + loginTuple.getSessionId());
+//            Log.d("SRV", "enviant logintuple = " + loginTuple.getSessionId());
 //            oos.writeLong(loginTuple.getSessionId());
             oos.writeObject(loginTuple);
             oos.flush();
-            Log.d("SRV", "sessionId enviat");
+//            Log.d("SRV", "sessionId enviat");
 
             // llegim resposta del servidor
             res = ois.readInt();
@@ -199,37 +201,36 @@ public class MainActivity extends AppCompatActivity
             }
 
             // Llegim qt de taules que ens enviarà el server
-            Log.d("SRV", "esperant resposta del server");
+//            Log.d("SRV", "esperant resposta del server");
             qt = ois.readInt();
-            Log.d("SRV", "resposta del server REBUDA");
+//            Log.d("SRV", "resposta del server REBUDA");
 
             for (int i = 0; i < qt; i++) {
                 // llegim objecte
                 InfoTaula it = (InfoTaula) ois.readObject();
-                Log.d("GETTAULA", "taula recuperada: " + it.getNumero() + " " + it.getNomCambrer());
+//                Log.d("GETTAULA", "taula recuperada: " + it.getNumero() + " " + it.getNomCambrer());
                 infoTaules.add(it);
 
                 // enviem ok
                 oos.write(new byte[1]);
                 oos.flush();
             }
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-            Log.d("SRV", e.getLocalizedMessage());
+            Log.d("SRV", e.getMessage());
         } finally {
             try {
-                oos.close();
-                socket.close();
+                if (oos!=null) oos.close();
+                if (socket!=null) socket.close();
             } catch (IOException e) {
                 e.printStackTrace();
-                Log.d("SRV", e.getLocalizedMessage());
+                Log.d("SRV", e.getMessage());
             }
         }
 
         return infoTaules;
-
-
     }
+
 
     private Taula getTaulaSeleccionada(int numeroTaula) {
         Socket socket = null;
@@ -244,17 +245,16 @@ public class MainActivity extends AppCompatActivity
             oos = new ObjectOutputStream(socket.getOutputStream());
             ois = new ObjectInputStream(socket.getInputStream());
 
-
             // Enviem codi d'operació: GETTAULES 2
             oos.writeInt(CodiOperacio.GET_TAULA_SELECCIONADA.getNumVal());
             oos.flush();
 
             // enviem sessionId
-            Log.d("SRV", "enviant logintuple = " + loginTuple.getSessionId());
+//            Log.d("SRV", "enviant logintuple = " + loginTuple.getSessionId());
 //            oos.writeLong(loginTuple.getSessionId());
             oos.writeObject(loginTuple);
             oos.flush();
-            Log.d("SRV", "sessionId enviat");
+//            Log.d("SRV", "sessionId enviat");
 
             // llegim resposta del servidor
             res = ois.readInt();
@@ -316,6 +316,7 @@ public class MainActivity extends AppCompatActivity
     public void onSelectedInfoTaula(InfoTaula seleccionada) {
         // Seleccionem registre de la taula seleccionada
         // Crida assíncrona per enviar credencials al servidor
+        setLoading(true);
         Observable.fromCallable(() -> {
             //---------------- START OF THREAD ------------------------------------
             // Hem de recuperar: comanda + linies d'aquesta taula, si en té
@@ -329,6 +330,7 @@ public class MainActivity extends AppCompatActivity
                     //-------------  UI THREAD ---------------------------------------
                     this.taulaSeleccionada = taulaSeleccionada;
                     Log.d("getTaulaSeleccionada", "Taula seleccionada: " + taulaSeleccionada);
+                    setLoading(false);
 
                     if (this.taulaSeleccionada != null) {
                         // aturem thread "refrescador"
@@ -347,10 +349,48 @@ public class MainActivity extends AppCompatActivity
                 });
     }
 
+
     @Override
+    public void confirmacioBuidarTaula(InfoTaula seleccionada) {
+        AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
+        builder1.setMessage("Estàs segur que vols buidar aquesta taula?");
+        builder1.setCancelable(true);
+
+        builder1.setPositiveButton("Sí", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+                buidarTaula(seleccionada);
+            }
+        });
+        builder1.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        AlertDialog alert11 = builder1.create();
+        alert11.show();
+    }
+
+//    @Override
+//    public void onClick(DialogInterface dialog, int which) {
+//        if (which==DialogInterface.BUTTON_POSITIVE){
+//            dialog.cancel();
+//            startActivity(getIntent());
+//            finish();
+//        } else {
+//            dialog.cancel();
+//            finish();
+//        }
+//    }
+
+
+
     public void buidarTaula(InfoTaula seleccionada) {
         // Seleccionem registre de la taula seleccionada
         // Crida assíncrona per enviar credencials al servidor
+        setLoading(true);
         Observable.fromCallable(() -> {
             //---------------- START OF THREAD ------------------------------------
             // Això és el codi que s'executarà en un fil
@@ -361,7 +401,7 @@ public class MainActivity extends AppCompatActivity
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe((resultat) -> {
                     //-------------  UI THREAD ---------------------------------------
-
+                    setLoading(false);
                     // if resultat == -1: ERROR, 0 == tot bé
                     if (resultat == 0) {
                         Toast.makeText(getApplicationContext(), "Taula buidada amb èxit", Toast.LENGTH_LONG).show();
