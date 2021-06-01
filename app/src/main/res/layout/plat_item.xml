@@ -3,28 +3,25 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:background="@drawable/plat_bg"
     android:layout_margin="10dp">
 
-    <ImageButton
-        android:background="@drawable/plus"
-        android:id="@+id/btnAfegirPlat"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:text="-"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"></ImageButton>
 
     <TextView
         android:id="@+id/txvPreuPlat"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:fontFamily="serif"
         android:text="20,00€"
+        android:textColor="@color/saddle_brown"
+        android:textSize="15dp"
+        app:layout_constraintBottom_toTopOf="@+id/imvImatgePlat"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:background="@color/yellow"></TextView>
+        app:layout_constraintTop_toTopOf="parent"></TextView>
 
+    <!-- todo: carregar foto -->
     <ImageView
         android:id="@+id/imvImatgePlat"
         android:layout_width="50dp"
@@ -33,24 +30,54 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:background="@color/black"></ImageView>
+        android:background="@color/saddle_brown"></ImageView>
 
     <TextView
         android:id="@+id/txvNomPlat"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Patates fregides"
+        android:textAlignment="center"
+        android:textColor="@color/saddle_brown"
+        android:fontFamily="cursive"
+        android:textSize="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imvImatgePlat"
-        android:background="@color/orange"></TextView>
+        app:layout_constraintTop_toBottomOf="@+id/imvImatgePlat"></TextView>
 
-    <ImageButton
-        android:background="@drawable/minus_red"
-        android:id="@+id/btnTreurePlat"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:text="+"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"></ImageButton>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txvNomPlat">
+
+        <ImageButton
+            android:id="@+id/btnTreurePlat"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginEnd="32dp"
+            android:background="@drawable/minus_red"
+            android:text="+"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btnAfegirPlat"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"></ImageButton>
+
+        <ImageButton
+            android:id="@+id/btnAfegirPlat"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:background="@drawable/plus"
+            android:text="-"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/btnTreurePlat"
+            app:layout_constraintTop_toTopOf="parent"></ImageButton>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

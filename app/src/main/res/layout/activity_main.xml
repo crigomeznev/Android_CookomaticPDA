@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@drawable/parquet_texture_vertical">
 
     <TextView
         android:layout_width="match_parent"
@@ -17,12 +18,4 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"></androidx.recyclerview.widget.RecyclerView>
 
-    <Button android:id="@+id/btnProva" android:text="Say Hello!"
-        android:layout_height="wrap_content" android:layout_width="wrap_content"></Button>
-
-    <TextView
-        android:id="@+id/txvServer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Resposta del server:"></TextView>
 </LinearLayout>

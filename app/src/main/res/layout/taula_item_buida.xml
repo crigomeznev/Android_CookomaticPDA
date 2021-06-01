@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/taula_bg_buida"
     android:layout_margin="10dp"
@@ -10,18 +12,38 @@
         android:id="@+id/txvNumTaula"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="serif"
         android:text="1"
-        android:textSize="30dp" android:textStyle="bold"></TextView>
+        android:textAlignment="center"
+        android:textColor="@color/rosy_brown"
+        android:textSize="30dp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"></TextView>
+
     <TextView
         android:id="@+id/txvCambrer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text=""
-        android:textSize="20dp"></TextView>
+        android:fontFamily="serif"
+        android:text="BUIDA"
+        android:textAlignment="center"
+        android:textColor="@color/rosy_brown"
+        android:textSize="20dp"
+        app:layout_constraintEnd_toEndOf="@+id/txvNumTaula"
+        app:layout_constraintStart_toStartOf="@+id/txvNumTaula"
+        app:layout_constraintTop_toBottomOf="@+id/txvNumTaula"></TextView>
+
     <ProgressBar
+        android:id="@+id/progressBar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:visibility="invisible"/>
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txvCambrer" />
 
-</LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

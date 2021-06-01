@@ -7,5 +7,5 @@
         android:bottomLeftRadius="10dp"
         android:bottomRightRadius="10dp"></corners>
 
-    <solid android:color="@color/teal_200"></solid>
+    <solid android:color="@color/beige"></solid>
 </shape>

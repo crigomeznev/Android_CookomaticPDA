@@ -4,15 +4,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="100dp"
     android:layout_height="wrap_content"
-    android:background="@color/yellow"
+    android:background="@drawable/categoria_bg"
     android:layout_margin="10dp">
 
     <TextView
         android:id="@+id/txvNomCategoria"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_margin="10dp"
         android:text="CATEGORIA"
-        android:textColor="@color/black"
+        android:fontFamily="serif"
+        android:textColor="@color/goldenrod"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

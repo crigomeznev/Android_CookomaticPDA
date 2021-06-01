@@ -13,7 +13,21 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:background="@color/burlyWood">
+
+        <TextView
+            android:id="@+id/txvTitolComanda"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:text="Comanda"
+            android:textSize="20dp"
+            android:textStyle="bold"
+            android:fontFamily="serif-monospace"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"></TextView>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rcyLinies"
@@ -21,29 +35,32 @@
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"></androidx.recyclerview.widget.RecyclerView>
+            app:layout_constraintTop_toBottomOf="@id/txvTitolComanda"
+            android:layout_margin="10dp"></androidx.recyclerview.widget.RecyclerView>
 
         <Button
             android:id="@+id/btnConfirmar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
             android:text="Confirmar"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/rcyLinies"></Button>
+            app:layout_constraintStart_toStartOf="parent"></Button>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:background="@color/light_grey">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rcyCategories"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"></androidx.recyclerview.widget.RecyclerView>
+            android:layout_height="wrap_content"
+            android:background="@color/black"></androidx.recyclerview.widget.RecyclerView>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rcyPlats"

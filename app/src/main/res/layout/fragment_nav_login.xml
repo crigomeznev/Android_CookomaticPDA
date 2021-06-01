@@ -5,13 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".NavLogin"
-    android:background="@color/goldenrod">
+    android:background="#292011">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
         android:text="Inicia sessió"
+        android:textColor="@color/goldenrod"
         android:textSize="40dp"
         android:fontFamily="serif"
         app:layout_constraintEnd_toEndOf="parent"
@@ -23,10 +24,11 @@
         android:layout_width="300dp"
         android:layout_height="1dp"
         android:layout_marginBottom="32dp"
-        android:background="@color/saddle_brown"
+        android:background="@color/goldenrod"
         app:layout_constraintBottom_toTopOf="@+id/gridLayout"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"></LinearLayout>
+        app:layout_constraintStart_toStartOf="parent"
+        android:orientation="horizontal"></LinearLayout>
 
     <GridLayout
         android:alignmentMode="alignBounds"
@@ -57,7 +59,7 @@
         android:layout_width="300dp"
         android:layout_height="1dp"
         android:layout_marginTop="32dp"
-        android:background="@color/saddle_brown"
+        android:background="@color/goldenrod"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/gridLayout"></LinearLayout>

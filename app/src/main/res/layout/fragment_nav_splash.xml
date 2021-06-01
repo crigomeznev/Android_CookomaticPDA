@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".NavSplash"
-    android:background="@color/goldenrod">
+    android:background="#292011">
 
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -25,6 +25,7 @@
             android:fontFamily="cursive"
             android:text="Restaurant"
             android:textSize="30dp"
+            android:textColor="@color/goldenrod"
             app:layout_constraintEnd_toEndOf="@+id/txvTitol"
             app:layout_constraintStart_toStartOf="@+id/txvTitol"
             app:layout_constraintTop_toTopOf="parent"></TextView>
@@ -36,6 +37,7 @@
             android:fontFamily="cursive"
             android:text="El bon profit"
             android:textSize="60dp"
+            android:textColor="@color/goldenrod"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/txvRestaurant" />
@@ -45,7 +47,7 @@
             android:layout_width="150dp"
             android:layout_height="150dp"
             android:layout_marginTop="32dp"
-            android:src="@drawable/restaurant_icon"
+            android:src="@drawable/restaurant_logo_dark_goldenrod"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/txvTitol"></ImageView>
@@ -58,6 +60,7 @@
         android:layout_marginTop="16dp"
         android:text="Cook-o-matic PDA Application"
         android:fontFamily="serif"
+        android:textColor="@color/goldenrod"
         app:layout_constraintEnd_toEndOf="@+id/constraintLayout"
         app:layout_constraintStart_toStartOf="@+id/constraintLayout"
         app:layout_constraintTop_toBottomOf="@+id/constraintLayout"></TextView>
@@ -67,6 +70,7 @@
         android:layout_height="wrap_content"
         android:text="Cristian Gómez Nevado, 2020-21"
         android:fontFamily="serif"
+        android:textColor="@color/goldenrod"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"></TextView>
