@@ -1,6 +1,8 @@
 package com.example.cookomaticpda.adapters;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +20,8 @@ import com.example.cookomaticpda.R;
 
 import org.milaifontanals.cookomatic.model.cuina.Plat;
 
+import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.List;
 
 public class PlatAdapter extends RecyclerView.Adapter<PlatAdapter.ViewHolder> {
@@ -37,7 +41,7 @@ public class PlatAdapter extends RecyclerView.Adapter<PlatAdapter.ViewHolder> {
         mActivity = activity;
         mPlats = plats;
 
-        Log.d("ADAPTER","plats = "+ mPlats);
+        Log.d("ADAPTER", "plats = " + mPlats);
 
     }
 
@@ -55,10 +59,29 @@ public class PlatAdapter extends RecyclerView.Adapter<PlatAdapter.ViewHolder> {
         Plat plat = mPlats.get(position);
 
         holder.txvNomPlat.setText(plat.getNom());
-        holder.txvPreuPlat.setText(plat.getPreu()+"");
-        // TODO: set imatge
-    }
+        holder.txvPreuPlat.setText(plat.getPreu() + "");
 
+        // TODO: set imatge
+        if (plat.getFotoBa() != null){
+            Bitmap bmp = BitmapFactory.decodeByteArray(plat.getFotoBa(), 0, plat.getFotoBa().length);
+            holder.imvImatgePlat.setImageBitmap(bmp);
+            Log.d("PLATADAPTER","s'ha establert la imatge del plat");
+
+        } else {
+            Log.d("PLATADAPTER", "plat no té foto");
+        }
+
+
+//        if (plat.getFoto() != null) {
+//            try {
+//                byte[] image = plat.getFoto().getBytes(0, (int) plat.getFoto().length());
+//            } catch (SQLException throwables) {
+//                Log.d("PLATADAPTER", "error en carregar foto del plat: " + throwables.getErrorCode(), throwables);
+//            }
+//        } else {
+//            Log.d("PLATADAPTER", "plat no té foto");
+//        }
+    }
 
 
     @Override
@@ -83,11 +106,10 @@ public class PlatAdapter extends RecyclerView.Adapter<PlatAdapter.ViewHolder> {
             btnTreurePlat = platView.findViewById(R.id.btnTreurePlat);
 
 
-
             btnAfegirPlat.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Log.d("Plat","AFEGIR PLAT: "+mPlats.get(getAdapterPosition()));
+                    Log.d("Plat", "AFEGIR PLAT: " + mPlats.get(getAdapterPosition()));
 //                    mListener.onSelectedItem(mPlats.get(getAdapterPosition()));
 //                    mActivity.afegirPlat(mPlats.get(getAdapterPosition()));
                     mListener.addLiniaItem(mPlats.get(getAdapterPosition()));
@@ -96,7 +118,7 @@ public class PlatAdapter extends RecyclerView.Adapter<PlatAdapter.ViewHolder> {
             btnTreurePlat.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Log.d("Plat","TREURE PLAT: "+this.toString());
+                    Log.d("Plat", "TREURE PLAT: " + this.toString());
                     mListener.deleteLiniaItem(mPlats.get(getAdapterPosition()));
                 }
             });
@@ -105,12 +127,10 @@ public class PlatAdapter extends RecyclerView.Adapter<PlatAdapter.ViewHolder> {
     }
 
 
-
-
-
     // On selected listener
     public static interface OnSelectedItemListener {
         void addLiniaItem(Plat item);
+
         void deleteLiniaItem(Plat item);
     }
 }
