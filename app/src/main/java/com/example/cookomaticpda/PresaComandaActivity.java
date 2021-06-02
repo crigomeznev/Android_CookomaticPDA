@@ -64,6 +64,7 @@ public class PresaComandaActivity extends AppCompatActivity
 
 
     private Button btnConfirmar;
+    private Button btnTotesCategories;
     private RecyclerView rcyPlats;
     private RecyclerView rcyLinies;
     private RecyclerView rcyCategories;
@@ -109,6 +110,15 @@ public class PresaComandaActivity extends AppCompatActivity
                 inserirComanda();
             }
         });
+
+        btnTotesCategories = findViewById(R.id.btnTotesCategories);
+        btnTotesCategories.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onSelectedCategoria(null); // passem categoria null i aixi omple amb tots plats de totes categories
+            }
+        });
+
         rcyPlats = findViewById(R.id.rcyPlats);
         rcyLinies = findViewById(R.id.rcyLinies);
         rcyCategories = findViewById(R.id.rcyCategories);
@@ -413,7 +423,7 @@ public class PresaComandaActivity extends AppCompatActivity
     public void onSelectedCategoria(Categoria seleccionada) {
         mPlatsFiltrats.clear();
         for (Plat plat : hmPlats.values()) {
-            if (plat.getCategoria().equals(seleccionada)) {
+            if (plat.getCategoria().equals(seleccionada) || seleccionada==null) {
                 mPlatsFiltrats.add(plat);
             }
         }

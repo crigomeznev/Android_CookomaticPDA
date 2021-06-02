@@ -51,18 +51,11 @@ public class NavLogin extends Fragment {
     private static final int E_UNKNOWN = 3; // Error per credencials incorrectes
 
 
+    // Required empty public constructor
     public NavLogin() {
-        // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment NavLogin.
-     */
+
     public static NavLogin newInstance(String param1, String param2) {
         NavLogin fragment = new NavLogin();
         Bundle args = new Bundle();
@@ -70,10 +63,12 @@ public class NavLogin extends Fragment {
         return fragment;
     }
 
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -84,8 +79,6 @@ public class NavLogin extends Fragment {
         btnStart = root.findViewById(R.id.btnStart);
         edtLogin = root.findViewById(R.id.edtLogin);
         edtPassword = root.findViewById(R.id.edtPassword);
-//        txvSessionId = root.findViewById(R.id.txvSessionId);
-
 
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override

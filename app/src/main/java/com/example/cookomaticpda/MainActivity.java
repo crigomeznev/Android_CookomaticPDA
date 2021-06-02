@@ -49,27 +49,25 @@ import static com.example.cookomaticpda.ServerInfo.SRVPORT;
 public class MainActivity extends AppCompatActivity
         implements InfoTaulaAdapter.OnSelectedItemListener {
 
-    // UI
+    // Elements UI
     private RecyclerView rcyTaules;
     private ProgressBar pgrLoading;
 
-    //    private ComandaAdapter mAdapter;
-    private InfoTaulaAdapter mAdapter;
-    private List<Comanda> mComandes;
-    private List<Taula> mTaules;
-
-
-    private List<InfoTaula> mInfoTaules;
-
-
     private LoginTuple loginTuple;
-
     private Taula taulaSeleccionada;
+    private List<InfoTaula> mInfoTaules;
+    private InfoTaulaAdapter mAdapter;
+//    private List<Comanda> mComandes;
+//    private List<Taula> mTaules;
 
     private Handler thRefrescaPantalla;
 
     private int millisegons = 3000;
 
+
+
+    //--------------------------------------------------------------------------------------------------
+    // MÈTODES PRINCIPALS
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,6 +95,7 @@ public class MainActivity extends AppCompatActivity
         iniciaRefrescaPantalla();
 //        refrescarPantalla(500);
     }
+
 
     // Avisar al servidor que tanquem l'aplicació
     @Override
@@ -128,73 +127,36 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    // Quan tornem de l'altra activity cap aquesta
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d("INTENTS", "Hem tornat a la MainActivity");
 
+        if (resultCode == Activity.RESULT_OK) {
+            // recarregar taules amb noves dades de les comandes
+            Toast.makeText(getApplicationContext(), "INSERT de la comanda amb ÈXIT", Toast.LENGTH_SHORT).show();
 
-    //--------------------------------------------------------------------------------------------------
-    // LOGOUT
-    // Diem al server que ens esborri de la llista de session ids
-    private void userLogout() {
-        Socket socket = null;
-        ObjectOutputStream oos = null;
-        ObjectInputStream ois = null;
-
-        try {
-//            socket = new Socket();
-//            socket.setSoTimeout(1000);
-//            socket.connect(new InetSocketAddress(ServerInfo.SRVIP, ServerInfo.SRVPORT), 1000);
-
-            socket = new Socket(ServerInfo.SRVIP, ServerInfo.SRVPORT); // això és bloquejant, millorar
-
-            oos = new ObjectOutputStream(socket.getOutputStream());
-            ois = new ObjectInputStream(socket.getInputStream());
-
-            // Enviem codi d'operació: LOGOUT - 10
-//            oos.writeInt(CodiOperacio.LOGOUT.getNumVal());
-            oos.writeInt(CodiOperacio.LOGOUT.getNumVal());
-            oos.flush();
-
-            // Enviarem "tupla" LoginTuple
-            oos.writeObject(loginTuple);
-            oos.flush();
-
-            // llegim ok
-            ois.readInt();
-
-        } catch (SocketTimeoutException e) {
-            // Temps d'espera esgotat
-            e.printStackTrace();
-            Log.d("SRV", e.getMessage());
-//            errNo = E_SRVCON;
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.d("SRV", e.getLocalizedMessage());
-//            errNo = E_UNKNOWN;
-        } finally {
-            try {
-                if (oos != null) oos.close();
-                if (socket != null) socket.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-                Log.d("SRV", e.getLocalizedMessage());
-                throw new CookomaticException("Error en fer login", e);
-            }
+//            recuperarInfoTaules();
+        } else if (resultCode == Activity.RESULT_CANCELED) {
+            Toast.makeText(getApplicationContext(), "No s'ha pogut fer insert de la comanda", Toast.LENGTH_SHORT).show();
         }
+        iniciaRefrescaPantalla();
     }
 
 
+
     //--------------------------------------------------------------------------------------------------
-    // Fil que va actualitzant taules de la BD
-
-
-
-
+    // FIL QUE ACTUALITZA TAULES DE LA BD
     private void iniciaRefrescaPantalla() {
         refrescadorPantalla.run();
     }
 
+
     private void aturaRefrescaPantalla() {
         thRefrescaPantalla.removeCallbacks(refrescadorPantalla);
     }
+
 
     // Refrescar la pantalla cada x segons
     Runnable refrescadorPantalla = new Runnable() {
@@ -210,12 +172,6 @@ public class MainActivity extends AppCompatActivity
             }
         }
     };
-
-    //--------------------------------------------------------------------------------------------------
-    // UI
-    private void setLoading(boolean isLoading) {
-        pgrLoading.setVisibility(isLoading ? View.VISIBLE : View.INVISIBLE);
-    }
 
 
     private void recuperarInfoTaules() {
@@ -248,6 +204,102 @@ public class MainActivity extends AppCompatActivity
                 });
     }
 
+
+
+    //--------------------------------------------------------------------------------------------------
+    // UI
+    private void setLoading(boolean isLoading) {
+        pgrLoading.setVisibility(isLoading ? View.VISIBLE : View.INVISIBLE);
+    }
+
+    @Override
+    public void onSelectedInfoTaula(InfoTaula seleccionada) {
+        // Seleccionem registre de la taula seleccionada
+        setLoading(true);
+        Observable.fromCallable(() -> {
+            //---------------- START OF THREAD ------------------------------------
+            // Hem de recuperar: comanda + linies d'aquesta taula, si en té
+            taulaSeleccionada = getTaulaSeleccionada(seleccionada.getNumero());
+            return taulaSeleccionada;
+            //--------------- END OF THREAD-------------------------------------
+        })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe((taulaSeleccionada) -> {
+                    //-------------  UI THREAD ---------------------------------------
+                    this.taulaSeleccionada = taulaSeleccionada;
+                    Log.d("getTaulaSeleccionada", "Taula seleccionada: " + taulaSeleccionada);
+                    setLoading(false);
+
+                    if (this.taulaSeleccionada != null) {
+                        // aturem thread "refrescador"
+                        aturaRefrescaPantalla();
+
+                        Intent intent = new Intent(getApplicationContext(), PresaComandaActivity.class);
+                        intent.putExtra("loginTuple", loginTuple);
+//                    intent.putExtra("numTaula", seleccionada.getNumero()); // nomes passem el numero de la taula seleccionada
+                        intent.putExtra("taulaSeleccionada", taulaSeleccionada); // nomes passem el numero de la taula seleccionada
+                        startActivityForResult(intent, 1);
+                    } else {
+                        Toast.makeText(getApplicationContext(), "ERROR: Taula no trobada en la BD", Toast.LENGTH_LONG).show();
+                    }
+
+                    //-------------  END OF UI THREAD ---------------------------------------
+                });
+    }
+
+
+    @Override
+    public void confirmacioBuidarTaula(InfoTaula seleccionada) {
+        AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
+        builder1.setMessage("Estàs segur que vols buidar aquesta taula?");
+        builder1.setCancelable(true);
+
+        builder1.setPositiveButton("Sí", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+                buidarTaula(seleccionada);
+            }
+        });
+        builder1.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        AlertDialog alert11 = builder1.create();
+        alert11.show();
+    }
+
+
+    public void buidarTaula(InfoTaula seleccionada) {
+        // Seleccionem registre de la taula seleccionada
+        setLoading(true);
+        Observable.fromCallable(() -> {
+            //---------------- START OF THREAD ------------------------------------
+            // Això és el codi que s'executarà en un fil
+            return finalitzarComandaDeTaula(seleccionada);
+            //--------------- END OF THREAD-------------------------------------
+        })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe((resultat) -> {
+                    //-------------  UI THREAD ---------------------------------------
+                    setLoading(false);
+                    // if resultat == -1: ERROR, 0 == tot bé
+                    if (resultat == 0) {
+                        Toast.makeText(getApplicationContext(), "Taula buidada amb èxit", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Error en buidar taula", Toast.LENGTH_LONG).show();
+                    }
+                    //-------------  END OF UI THREAD ---------------------------------------
+                });
+    }
+
+
+    //--------------------------------------------------------------------------------------------------
+    // CRIDES AL SERVIDOR
 
     private List<InfoTaula> getTaules() {
         Socket socket = null;
@@ -377,124 +429,6 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    // Quan tornem de l'altra activity cap aquesta
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        Log.d("INTENTS", "Hem tornat a la MainActivity");
-
-        if (resultCode == Activity.RESULT_OK) {
-            // recarregar taules amb noves dades de les comandes
-            Toast.makeText(getApplicationContext(), "INSERT de la comanda amb ÈXIT", Toast.LENGTH_SHORT).show();
-
-//            recuperarInfoTaules();
-        } else if (resultCode == Activity.RESULT_CANCELED) {
-            Toast.makeText(getApplicationContext(), "No s'ha pogut fer insert de la comanda", Toast.LENGTH_SHORT).show();
-        }
-        iniciaRefrescaPantalla();
-    }
-
-    @Override
-    public void onSelectedInfoTaula(InfoTaula seleccionada) {
-        // Seleccionem registre de la taula seleccionada
-        // Crida assíncrona per enviar credencials al servidor
-        setLoading(true);
-        Observable.fromCallable(() -> {
-            //---------------- START OF THREAD ------------------------------------
-            // Hem de recuperar: comanda + linies d'aquesta taula, si en té
-            taulaSeleccionada = getTaulaSeleccionada(seleccionada.getNumero());
-            return taulaSeleccionada;
-            //--------------- END OF THREAD-------------------------------------
-        })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe((taulaSeleccionada) -> {
-                    //-------------  UI THREAD ---------------------------------------
-                    this.taulaSeleccionada = taulaSeleccionada;
-                    Log.d("getTaulaSeleccionada", "Taula seleccionada: " + taulaSeleccionada);
-                    setLoading(false);
-
-                    if (this.taulaSeleccionada != null) {
-                        // aturem thread "refrescador"
-                        aturaRefrescaPantalla();
-
-                        Intent intent = new Intent(getApplicationContext(), PresaComandaActivity.class);
-                        intent.putExtra("loginTuple", loginTuple);
-//                    intent.putExtra("numTaula", seleccionada.getNumero()); // nomes passem el numero de la taula seleccionada
-                        intent.putExtra("taulaSeleccionada", taulaSeleccionada); // nomes passem el numero de la taula seleccionada
-                        startActivityForResult(intent, 1);
-                    } else {
-                        Toast.makeText(getApplicationContext(), "ERROR: Taula no trobada en la BD", Toast.LENGTH_LONG).show();
-                    }
-
-                    //-------------  END OF UI THREAD ---------------------------------------
-                });
-    }
-
-
-    @Override
-    public void confirmacioBuidarTaula(InfoTaula seleccionada) {
-        AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
-        builder1.setMessage("Estàs segur que vols buidar aquesta taula?");
-        builder1.setCancelable(true);
-
-        builder1.setPositiveButton("Sí", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-                buidarTaula(seleccionada);
-            }
-        });
-        builder1.setNegativeButton("No", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-        AlertDialog alert11 = builder1.create();
-        alert11.show();
-    }
-
-//    @Override
-//    public void onClick(DialogInterface dialog, int which) {
-//        if (which==DialogInterface.BUTTON_POSITIVE){
-//            dialog.cancel();
-//            startActivity(getIntent());
-//            finish();
-//        } else {
-//            dialog.cancel();
-//            finish();
-//        }
-//    }
-
-
-    public void buidarTaula(InfoTaula seleccionada) {
-        // Seleccionem registre de la taula seleccionada
-        // Crida assíncrona per enviar credencials al servidor
-        setLoading(true);
-        Observable.fromCallable(() -> {
-            //---------------- START OF THREAD ------------------------------------
-            // Això és el codi que s'executarà en un fil
-            return finalitzarComandaDeTaula(seleccionada);
-            //--------------- END OF THREAD-------------------------------------
-        })
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe((resultat) -> {
-                    //-------------  UI THREAD ---------------------------------------
-                    setLoading(false);
-                    // if resultat == -1: ERROR, 0 == tot bé
-                    if (resultat == 0) {
-                        Toast.makeText(getApplicationContext(), "Taula buidada amb èxit", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(getApplicationContext(), "Error en buidar taula", Toast.LENGTH_LONG).show();
-                    }
-                    //-------------  END OF UI THREAD ---------------------------------------
-                });
-    }
-
-
-    // FUNCIONS D'INTERACCIÓ AMB EL SERVIDOR
     private int finalitzarComandaDeTaula(InfoTaula infoTaula) {
         if (infoTaula == null) {
             Log.d("finComandaTaula", "infoTaula és null");
@@ -556,6 +490,62 @@ public class MainActivity extends AppCompatActivity
         }
         return res;
     }
+
+
+    // Diem al server que ens esborri de la llista de session ids
+    private void userLogout() {
+        Socket socket = null;
+        ObjectOutputStream oos = null;
+        ObjectInputStream ois = null;
+
+        try {
+//            socket = new Socket();
+//            socket.setSoTimeout(1000);
+//            socket.connect(new InetSocketAddress(ServerInfo.SRVIP, ServerInfo.SRVPORT), 1000);
+
+            socket = new Socket(ServerInfo.SRVIP, ServerInfo.SRVPORT); // això és bloquejant, millorar
+
+            oos = new ObjectOutputStream(socket.getOutputStream());
+            ois = new ObjectInputStream(socket.getInputStream());
+
+            // Enviem codi d'operació: LOGOUT - 10
+//            oos.writeInt(CodiOperacio.LOGOUT.getNumVal());
+            oos.writeInt(CodiOperacio.LOGOUT.getNumVal());
+            oos.flush();
+
+            // Enviarem "tupla" LoginTuple
+            oos.writeObject(loginTuple);
+            oos.flush();
+
+            // llegim ok
+            ois.readInt();
+
+        } catch (SocketTimeoutException e) {
+            // Temps d'espera esgotat
+            e.printStackTrace();
+            Log.d("SRV", e.getMessage());
+//            errNo = E_SRVCON;
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d("SRV", e.getLocalizedMessage());
+//            errNo = E_UNKNOWN;
+        } finally {
+            try {
+                if (oos != null) oos.close();
+                if (socket != null) socket.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.d("SRV", e.getLocalizedMessage());
+                throw new CookomaticException("Error en fer login", e);
+            }
+        }
+    }
+
+
+
+
+
+
 
 
 }
