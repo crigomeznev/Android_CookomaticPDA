@@ -25,6 +25,7 @@ import org.cookomatic.protocol.CodiOperacio;
 import org.cookomatic.protocol.CreateComandaTuple;
 import org.cookomatic.protocol.InfoTaula;
 import org.cookomatic.protocol.LoginTuple;
+import org.milaifontanals.cookomatic.exception.CookomaticException;
 import org.milaifontanals.cookomatic.model.sala.Cambrer;
 import org.milaifontanals.cookomatic.model.sala.Comanda;
 import org.milaifontanals.cookomatic.model.sala.Taula;
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -96,13 +98,95 @@ public class MainActivity extends AppCompatActivity
 //        refrescarPantalla(500);
     }
 
-    //--------------------------------------------------------------------------------------------------
-    // Fil que va actualitzant taules de la BD
+    // Avisar al servidor que tanquem l'aplicació
     @Override
     protected void onDestroy() {
+        Log.d("DESTROY", "Tancant aplicació");
         super.onDestroy();
         aturaRefrescaPantalla();
+
+        // LOGOUT
+        Observable.fromCallable(() -> {
+            //---------------- START OF THREAD ------------------------------------
+            try {
+                userLogout();
+            } catch (Exception ex) {
+                Log.d("LOGOUT", ex.getMessage(), ex);
+            }
+            return true;
+            //--------------- END OF THREAD-------------------------------------
+        })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe((loginTupleNull) -> {
+                    //-------------  UI THREAD ---------------------------------------
+                    Log.d("DESTROY", "Aplicació tancada");
+                    //-------------  END OF UI THREAD ---------------------------------------
+                });
+
+
     }
+
+
+
+
+    //--------------------------------------------------------------------------------------------------
+    // LOGOUT
+    // Diem al server que ens esborri de la llista de session ids
+    private void userLogout() {
+        Socket socket = null;
+        ObjectOutputStream oos = null;
+        ObjectInputStream ois = null;
+
+        try {
+//            socket = new Socket();
+//            socket.setSoTimeout(1000);
+//            socket.connect(new InetSocketAddress(ServerInfo.SRVIP, ServerInfo.SRVPORT), 1000);
+
+            socket = new Socket(ServerInfo.SRVIP, ServerInfo.SRVPORT); // això és bloquejant, millorar
+
+            oos = new ObjectOutputStream(socket.getOutputStream());
+            ois = new ObjectInputStream(socket.getInputStream());
+
+            // Enviem codi d'operació: LOGOUT - 10
+//            oos.writeInt(CodiOperacio.LOGOUT.getNumVal());
+            oos.writeInt(CodiOperacio.LOGOUT.getNumVal());
+            oos.flush();
+
+            // Enviarem "tupla" LoginTuple
+            oos.writeObject(loginTuple);
+            oos.flush();
+
+            // llegim ok
+            ois.readInt();
+
+        } catch (SocketTimeoutException e) {
+            // Temps d'espera esgotat
+            e.printStackTrace();
+            Log.d("SRV", e.getMessage());
+//            errNo = E_SRVCON;
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d("SRV", e.getLocalizedMessage());
+//            errNo = E_UNKNOWN;
+        } finally {
+            try {
+                if (oos != null) oos.close();
+                if (socket != null) socket.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.d("SRV", e.getLocalizedMessage());
+                throw new CookomaticException("Error en fer login", e);
+            }
+        }
+    }
+
+
+    //--------------------------------------------------------------------------------------------------
+    // Fil que va actualitzant taules de la BD
+
+
+
 
     private void iniciaRefrescaPantalla() {
         refrescadorPantalla.run();
@@ -130,10 +214,8 @@ public class MainActivity extends AppCompatActivity
     //--------------------------------------------------------------------------------------------------
     // UI
     private void setLoading(boolean isLoading) {
-        pgrLoading.setVisibility(isLoading? View.VISIBLE:View.INVISIBLE);
+        pgrLoading.setVisibility(isLoading ? View.VISIBLE : View.INVISIBLE);
     }
-
-
 
 
     private void recuperarInfoTaules() {
@@ -144,8 +226,8 @@ public class MainActivity extends AppCompatActivity
             List<InfoTaula> infoTaules = new ArrayList<>();
             try {
                 infoTaules = getTaules(); // TODO: try-catch
-            } catch(Exception e){
-                Log.d("INFOTAULES", "Error en recuperar info taules: "+e.getMessage(), e);
+            } catch (Exception e) {
+                Log.d("INFOTAULES", "Error en recuperar info taules: " + e.getMessage(), e);
             }
 
             return infoTaules;
@@ -220,8 +302,8 @@ public class MainActivity extends AppCompatActivity
             Log.d("SRV", e.getMessage());
         } finally {
             try {
-                if (oos!=null) oos.close();
-                if (socket!=null) socket.close();
+                if (oos != null) oos.close();
+                if (socket != null) socket.close();
             } catch (IOException e) {
                 e.printStackTrace();
                 Log.d("SRV", e.getMessage());
@@ -384,7 +466,6 @@ public class MainActivity extends AppCompatActivity
 //            finish();
 //        }
 //    }
-
 
 
     public void buidarTaula(InfoTaula seleccionada) {

@@ -23,7 +23,9 @@ import org.milaifontanals.cookomatic.model.sala.Cambrer;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
@@ -42,7 +44,11 @@ public class NavLogin extends Fragment {
 
     // Login
     private LoginTuple mLoginTuple;
-
+    private int errNo = 0;
+    private static final int NOERROR = 0;
+    private static final int E_SRVCON = 1; // Error en connectar-se al servidor
+    private static final int E_CREDS = 2; // Error per credencials incorrectes
+    private static final int E_UNKNOWN = 3; // Error per credencials incorrectes
 
 
     public NavLogin() {
@@ -106,7 +112,6 @@ public class NavLogin extends Fragment {
                         // demanem al server un logintuple que conté session id
                         // si credencials correctes, ens el retorna
                         // altrament, obtenim null
-                        boolean fallo = false;
                         LoginTuple loginTuple = null;
 
                         try{
@@ -129,8 +134,16 @@ public class NavLogin extends Fragment {
                                 // d'interfície gràfica.
 //                                setLoading(false); // TODO: progressbar
                                 if (loginTupleNull) {
+                                    // Hi ha hagut algun error, mostrem missatge personalitzat:
+                                    String errMsg = "";
+                                    switch (errNo){
+                                        case E_SRVCON: errMsg = "Error: no es pot connectar al servidor"; break;
+                                        case E_CREDS: errMsg = "Error: credencials incorrectes o usuari desconegut"; break;
+                                        case E_UNKNOWN: errMsg = "Error: desconegut"; break;
+                                    }
                                     // Login incorrecte (login o contrasenya incorrectes), no deixem entrar
-                                    Toast.makeText(getContext(), "Error: Login o contrasenya incorrectes, cambrer no consta en la BD, o servidor tancat", Toast.LENGTH_SHORT).show();
+                                    // Missatge diferent segons codi d'error (errNo)
+                                    Toast.makeText(getContext(), errMsg, Toast.LENGTH_SHORT).show();
                                 } else {
                                     // Login correcte o primer login, deixem entrar
                                     Intent intent = new Intent(getContext(), MainActivity.class);
@@ -138,19 +151,6 @@ public class NavLogin extends Fragment {
                                     intent.putExtra("loginTuple", mLoginTuple);
                                     startActivity(intent);
                                 }
-
-
-//                                mLoginTuple = newLoginTuple;
-//                                if (mLoginTuple == null) {
-//                                    // Login incorrecte (login o contrasenya incorrectes), no deixem entrar
-//                                    Toast.makeText(getContext(), "Login o contrasenya incorrectes, o cambrer no consta en la BD", Toast.LENGTH_SHORT).show();
-//                                } else {
-//                                    // Login correcte o primer login, deixem entrar
-//                                    Intent intent = new Intent(getContext(), MainActivity.class);
-//                                    // passem loginTuple a l'altra activity
-//                                    intent.putExtra("loginTuple", mLoginTuple);
-//                                    startActivity(intent);
-//                                }
                                 //-------------  END OF UI THREAD ---------------------------------------
                             });
                 }
@@ -185,7 +185,7 @@ public class NavLogin extends Fragment {
 
     // S'executa dins d'un THREAD
     private LoginTuple userLogin() {
-        boolean credencialsCorrectes = false;
+//        boolean credencialsCorrectes = false;
 
         LoginTuple loginTuple = null;
 
@@ -197,16 +197,19 @@ public class NavLogin extends Fragment {
         ObjectInputStream ois = null;
 
         try {
-            socket = new Socket(ServerInfo.SRVIP, ServerInfo.SRVPORT);
+//            socket = new Socket();
+//            socket.setSoTimeout(1000);
+//            socket.connect(new InetSocketAddress(ServerInfo.SRVIP, ServerInfo.SRVPORT), 1000);
+
+            socket = new Socket(ServerInfo.SRVIP, ServerInfo.SRVPORT); // això és bloquejant, millorar
+
             oos = new ObjectOutputStream(socket.getOutputStream());
             ois = new ObjectInputStream(socket.getInputStream());
 
-            Cambrer cambrer = new Cambrer(0,"a","a",null,login,password);
+            Cambrer cambrer = new Cambrer(0, "a", "a", null, login, password);
             loginTuple = new LoginTuple(cambrer, null);
             final Long sessionId;
-            Long sessionIdAux = null;
 
-//                    try {
             // enviem logintuple
             Log.d("SRV", "enviant missatge");
 
@@ -221,15 +224,12 @@ public class NavLogin extends Fragment {
             // llegim ok
             ois.readInt();
 
-
             Log.d("SRV", "esperant resposta del server");
             int res = ois.readInt();
             Log.d("SRV", "resposta del server REBUDA");
-//                        int res = (int)ois.readObject();
 
             // si la resposta == OK
             if (res == 1) {
-                credencialsCorrectes = true;
                 // llegim LoginTuple
                 loginTuple = (LoginTuple) ois.readObject();
                 // enviem ok
@@ -237,11 +237,17 @@ public class NavLogin extends Fragment {
                 oos.flush();
             } else {
                 // Empleat no consta a la BD o login incorrecte
-                credencialsCorrectes = false;
+                errNo = E_CREDS;
             }
+        } catch (SocketTimeoutException e) {
+            // Temps d'espera esgotat
+            e.printStackTrace();
+            Log.d("SRV", e.getMessage());
+            errNo = E_SRVCON;
         } catch (Exception e) {
             e.printStackTrace();
             Log.d("SRV", e.getLocalizedMessage());
+            errNo = E_UNKNOWN;
         } finally {
             try {
                 if (oos!=null) oos.close();
@@ -252,7 +258,6 @@ public class NavLogin extends Fragment {
                 throw new CookomaticException("Error en fer login", e);
             }
         }
-
         return loginTuple;
     }
 
