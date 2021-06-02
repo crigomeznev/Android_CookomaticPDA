@@ -21,12 +21,12 @@ import com.example.cookomaticpda.adapters.PlatAdapter;
 import org.cookomatic.protocol.CodiOperacio;
 import org.cookomatic.protocol.CreateComandaTuple;
 import org.cookomatic.protocol.LoginTuple;
-import org.milaifontanals.cookomatic.model.cuina.Categoria;
-import org.milaifontanals.cookomatic.model.cuina.Plat;
-import org.milaifontanals.cookomatic.model.sala.Comanda;
-import org.milaifontanals.cookomatic.model.sala.EstatLinia;
-import org.milaifontanals.cookomatic.model.sala.LiniaComanda;
-import org.milaifontanals.cookomatic.model.sala.Taula;
+import org.cookomatic.model.cuina.Categoria;
+import org.cookomatic.model.cuina.Plat;
+import org.cookomatic.model.sala.Comanda;
+import org.cookomatic.model.sala.EstatLinia;
+import org.cookomatic.model.sala.LiniaComanda;
+import org.cookomatic.model.sala.Taula;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;

@@ -18,7 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.cookomaticpda.PresaComandaActivity;
 import com.example.cookomaticpda.R;
 
-import org.milaifontanals.cookomatic.model.cuina.Plat;
+import org.cookomatic.model.cuina.Plat;
 
 import java.io.InputStream;
 import java.sql.SQLException;

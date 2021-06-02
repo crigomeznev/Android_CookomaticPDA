@@ -25,10 +25,10 @@ import org.cookomatic.protocol.CodiOperacio;
 import org.cookomatic.protocol.CreateComandaTuple;
 import org.cookomatic.protocol.InfoTaula;
 import org.cookomatic.protocol.LoginTuple;
-import org.milaifontanals.cookomatic.exception.CookomaticException;
-import org.milaifontanals.cookomatic.model.sala.Cambrer;
-import org.milaifontanals.cookomatic.model.sala.Comanda;
-import org.milaifontanals.cookomatic.model.sala.Taula;
+import org.cookomatic.exception.CookomaticException;
+import org.cookomatic.model.sala.Cambrer;
+import org.cookomatic.model.sala.Comanda;
+import org.cookomatic.model.sala.Taula;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;

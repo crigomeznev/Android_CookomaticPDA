@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.cookomaticpda.R;
 
-import org.milaifontanals.cookomatic.model.cuina.Categoria;
+import org.cookomatic.model.cuina.Categoria;
 
 import java.util.List;
 

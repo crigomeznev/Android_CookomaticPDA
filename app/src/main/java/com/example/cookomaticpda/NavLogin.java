@@ -18,8 +18,8 @@ import android.widget.Toast;
 
 import org.cookomatic.protocol.CodiOperacio;
 import org.cookomatic.protocol.LoginTuple;
-import org.milaifontanals.cookomatic.exception.CookomaticException;
-import org.milaifontanals.cookomatic.model.sala.Cambrer;
+import org.cookomatic.exception.CookomaticException;
+import org.cookomatic.model.sala.Cambrer;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;

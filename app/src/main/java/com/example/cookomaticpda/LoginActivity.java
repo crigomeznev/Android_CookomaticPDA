@@ -21,7 +21,7 @@ import com.example.cookomaticpda.uiswipe.SectionsPagerAdapter;
 
 import org.cookomatic.protocol.CodiOperacio;
 import org.cookomatic.protocol.LoginTuple;
-import org.milaifontanals.cookomatic.model.sala.Cambrer;
+import org.cookomatic.model.sala.Cambrer;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
