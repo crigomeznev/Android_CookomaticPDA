@@ -80,6 +80,9 @@ public class PresaComandaActivity extends AppCompatActivity
 
     private boolean teComandaActiva;
 
+
+    private int returnCode = RESULT_FIRST_USER;
+
 //    private PresaComandaActivity mActivity;
 //    private LinearLayout llaContainerButtons;
 
@@ -107,6 +110,10 @@ public class PresaComandaActivity extends AppCompatActivity
         btnConfirmar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (mLinies.size()<1){
+                    Toast.makeText(getApplicationContext(), "Una comanda ha de tenir com a mínim 1 línia", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 inserirComanda();
             }
         });
@@ -125,8 +132,6 @@ public class PresaComandaActivity extends AppCompatActivity
         pgrLoading = findViewById(R.id.pgrLoading);
 
         recuperarCarta();
-//        rcyPlats.setLayoutManager(new GridLayoutManager(this, 2)); // 3 columnes
-//        rcyPlats.setAdapter(new PlatAdapter(this, this, mPlatsFiltrats));
 
         // si la taula té una comanda activa, en mostrarem les linies
         if (mComanda != null && mComanda.iteLinies()!=null){
@@ -147,13 +152,17 @@ public class PresaComandaActivity extends AppCompatActivity
         lcAdapter = new LiniaComandaAdapter(this, mLinies);
         rcyLinies.setAdapter(lcAdapter);
 
-
-//        rcyCategories.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
-//        rcyCategories.setAdapter(new CategoriaAdapter(this, mCategories));
-
-
+        setResult(RESULT_FIRST_USER); // per defecte en tornar a l'activity anterior no es mostrarà cap missatge
     }
 
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        returnCode = RESULT_FIRST_USER;
+        setResult(RESULT_FIRST_USER);
+        Toast.makeText(getApplicationContext(), "PresaComanda destruida", Toast.LENGTH_SHORT).show();
+    }
 
     private void setLoading(boolean isLoading) {
         pgrLoading.setVisibility(isLoading? View.VISIBLE:View.INVISIBLE);
@@ -173,9 +182,6 @@ public class PresaComandaActivity extends AppCompatActivity
             List<Plat> plats = new ArrayList<>();
 
             getCarta(categories, plats);
-
-//            mCategories = categories;
-//            mPlats = plats;
 
             // Poblar hashmaps
             omplirDiccionaris(categories, plats);
@@ -200,7 +206,6 @@ public class PresaComandaActivity extends AppCompatActivity
                     rcyPlats.setAdapter(new PlatAdapter(this, this, mPlatsFiltrats));
 
                     setLoading(false);
-                    // construir recycler taules
                     //-------------  END OF UI THREAD ---------------------------------------
                 });
     }
@@ -289,9 +294,6 @@ public class PresaComandaActivity extends AppCompatActivity
                 oos.flush();
             }
 
-
-            // TODO: recuperar plats
-
         } catch (Exception  e) {
             e.printStackTrace();
             Log.d("SRV", e.getLocalizedMessage());
@@ -346,13 +348,6 @@ public class PresaComandaActivity extends AppCompatActivity
             // Enviem comandaTuple
             oos.writeObject(comandaTuple);
             oos.flush();
-
-            // llegim resposta del servidor
-//            res = ois.readInt();
-//            // si resposta == KO, avortem operació
-//            if (res == CodiOperacio.KO.getNumVal()){
-//                throw new RuntimeException("no s'ha pogut inserir nova comanda, operacio avortada");
-//            }
 
             Log.d("createComanda", "ESPERANT NOU CODI COMANDA");
             // Recuperem id de nova comanda
@@ -409,8 +404,6 @@ public class PresaComandaActivity extends AppCompatActivity
                         setResult(Activity.RESULT_OK, i);
                     }
                     // Tornem a activity anterior
-                    // Hem de crear un nou intent per retornar les dades a l'activity anterior.
-//                    i.putExtra(PARAM_OUT_NOM_PERSONATGE, nom);
                     setLoading(false);
                     finish();
                     // TODO: tornar a l'altra activity

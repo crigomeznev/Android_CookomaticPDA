@@ -23,6 +23,7 @@ import org.cookomatic.model.sala.Cambrer;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
@@ -246,7 +247,7 @@ public class NavLogin extends Fragment {
                 Log.d("LOGIN","Empleat no consta a la BD o login incorrecte");
                 errNo = E_CREDS;
             }
-        } catch (SocketTimeoutException e) {
+        } catch (SocketTimeoutException | ConnectException e) {
             // Temps d'espera esgotat
             e.printStackTrace();
             Log.d("SRV", e.getMessage());

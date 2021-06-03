@@ -53,26 +53,17 @@
             app:layout_constraintTop_toBottomOf="@+id/txvTitol"></ImageView>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <TextView
-        android:id="@+id/txvDesc"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Cook-o-matic PDA Application"
-        android:fontFamily="serif"
-        android:textColor="@color/goldenrod"
-        app:layout_constraintEnd_toEndOf="@+id/constraintLayout"
-        app:layout_constraintStart_toStartOf="@+id/constraintLayout"
-        app:layout_constraintTop_toBottomOf="@+id/constraintLayout"></TextView>
+
     <TextView
         android:id="@+id/txvAutor"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Cristian Gómez Nevado, 2020-21"
         android:fontFamily="serif"
+        android:text="Cristian Gómez Nevado, 2020-21"
         android:textColor="@color/goldenrod"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"></TextView>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/constraintLayout"></TextView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

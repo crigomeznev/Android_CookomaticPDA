@@ -57,8 +57,6 @@ public class MainActivity extends AppCompatActivity
     private Taula taulaSeleccionada;
     private List<InfoTaula> mInfoTaules;
     private InfoTaulaAdapter mAdapter;
-//    private List<Comanda> mComandes;
-//    private List<Taula> mTaules;
 
     private Handler thRefrescaPantalla;
 
@@ -84,16 +82,13 @@ public class MainActivity extends AppCompatActivity
         Log.d("INTENT", "logintuple recuperat: " + loginTuple.getCambrer().getUser() + "/" + loginTuple.getCambrer().getPassword() + " SID:" + loginTuple.getSessionId());
 
         mInfoTaules = new ArrayList<>();
-//        recuperarInfoTaules();
 
         // ini recycler view
         rcyTaules.setLayoutManager(new GridLayoutManager(this, 3)); // 3 columnes
 
-
         // Refrescar la pantalla cada x segons
         thRefrescaPantalla = new Handler();
         iniciaRefrescaPantalla();
-//        refrescarPantalla(500);
     }
 
 
@@ -131,15 +126,14 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.d("INTENTS", "Hem tornat a la MainActivity");
 
-        if (resultCode == Activity.RESULT_OK) {
-            // recarregar taules amb noves dades de les comandes
-            Toast.makeText(getApplicationContext(), "INSERT de la comanda amb ÈXIT", Toast.LENGTH_SHORT).show();
-
-//            recuperarInfoTaules();
-        } else if (resultCode == Activity.RESULT_CANCELED) {
-            Toast.makeText(getApplicationContext(), "No s'ha pogut fer insert de la comanda", Toast.LENGTH_SHORT).show();
+        switch (resultCode){
+            case Activity.RESULT_OK:
+                Toast.makeText(getApplicationContext(), "Comanda creada amb èxit", Toast.LENGTH_SHORT).show();
+                break;
+            case Activity.RESULT_CANCELED:
+                Toast.makeText(getApplicationContext(), "No s'ha pogut crear la comanda", Toast.LENGTH_SHORT).show();
+                break;
         }
         iniciaRefrescaPantalla();
     }
@@ -251,6 +245,15 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void confirmacioBuidarTaula(InfoTaula seleccionada) {
+        if (seleccionada.getNomCambrer()==null){
+            Toast.makeText(getApplicationContext(), "No pots buidar una taula buida", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (!seleccionada.isEsMeva()){
+            Toast.makeText(getApplicationContext(), "No pots buidar una taula que no és teva", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
         builder1.setMessage("Estàs segur que vols buidar aquesta taula?");
         builder1.setCancelable(true);
