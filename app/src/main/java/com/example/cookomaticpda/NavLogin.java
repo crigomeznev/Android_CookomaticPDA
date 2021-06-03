@@ -60,6 +60,7 @@ public class NavLogin extends Fragment {
         NavLogin fragment = new NavLogin();
         Bundle args = new Bundle();
         fragment.setArguments(args);
+
         return fragment;
     }
 
@@ -83,20 +84,25 @@ public class NavLogin extends Fragment {
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // Guardar les noves shared preferences
                 String login = edtLogin.getText().toString();
                 String password = edtPassword.getText().toString();
 
                 String loginSP = getFromSharedPreferences("login");
                 String passwordSP = getFromSharedPreferences("password");
 
-                Log.d("LOGIN", "loginSP=" + loginSP + "\tpasswordSP=" + passwordSP);
-
-                if (loginSP.isEmpty() || passwordSP.isEmpty()) {
-                    // primer login, ens guardem aquestes credencials
+                // Noves preferences: les guardem
+                if (!login.equals(loginSP) || !password.equals(passwordSP)) {
                     saveLoginSharedPreferences(login, password);
                     Toast.makeText(getContext(), "Login i contrasenya registrats correctament", Toast.LENGTH_SHORT).show();
+                }
 
-                } else {
+                Log.d("LOGIN", "loginSP=" + loginSP + "\tpasswordSP=" + passwordSP);
+
+//                if (loginSP.isEmpty() || passwordSP.isEmpty()) {
+//                    // primer login, ens guardem aquestes credencials
+//
+//                } else {
                     // Crida assíncrona per enviar credencials al servidor
                     Observable.fromCallable(() -> {
                         //---------------- START OF THREAD ------------------------------------
@@ -115,7 +121,8 @@ public class NavLogin extends Fragment {
 
                         mLoginTuple = loginTuple;
 
-                        return mLoginTuple==null; // TODO: NO POT RETORNAR NULL
+//                        return mLoginTuple==null; // TODO: NO POT RETORNAR NULL
+                        return true; // TODO: NO POT RETORNAR NULL
                         //--------------- END OF THREAD-------------------------------------
                     })
                             .subscribeOn(Schedulers.io())
@@ -126,7 +133,15 @@ public class NavLogin extends Fragment {
                                 // ha acabat !! A més, aquest codi s'executa en el fil
                                 // d'interfície gràfica.
 //                                setLoading(false); // TODO: progressbar
-                                if (loginTupleNull) {
+                                if (errNo == NOERROR) {
+                                    // Login correcte o primer login, deixem entrar
+                                    Intent intent = new Intent(getContext(), MainActivity.class);
+                                    // passem loginTuple a l'altra activity
+                                    intent.putExtra("loginTuple", mLoginTuple);
+                                    startActivity(intent);
+
+                                }else{
+//                                if (loginTupleNull) {
                                     // Hi ha hagut algun error, mostrem missatge personalitzat:
                                     String errMsg = "";
                                     switch (errNo){
@@ -137,18 +152,19 @@ public class NavLogin extends Fragment {
                                     // Login incorrecte (login o contrasenya incorrectes), no deixem entrar
                                     // Missatge diferent segons codi d'error (errNo)
                                     Toast.makeText(getContext(), errMsg, Toast.LENGTH_SHORT).show();
-                                } else {
-                                    // Login correcte o primer login, deixem entrar
-                                    Intent intent = new Intent(getContext(), MainActivity.class);
-                                    // passem loginTuple a l'altra activity
-                                    intent.putExtra("loginTuple", mLoginTuple);
-                                    startActivity(intent);
                                 }
                                 //-------------  END OF UI THREAD ---------------------------------------
                             });
-                }
+//                }
             }
         });
+
+        // Carregar dades de sharedpreferences
+        String loginSP = getFromSharedPreferences("login");
+        String passwordSP = getFromSharedPreferences("password");
+
+        edtLogin.setText(loginSP);
+        edtPassword.setText(passwordSP);
 
         return root;
     }
@@ -171,15 +187,11 @@ public class NavLogin extends Fragment {
 
         String value = sharedPref.getString(key, "");
         // si no troba la propietat, retorna defValue (en aquest cas "")
-//        int defaultValue = getResources().getInteger(R.integer.saved_high_score_default_key);
-//        int highScore = sharedPref.getInt(getString(R.string.saved_high_score_key), defaultValue);
         return value;
     }
 
     // S'executa dins d'un THREAD
     private LoginTuple userLogin() {
-//        boolean credencialsCorrectes = false;
-
         LoginTuple loginTuple = null;
 
         String login = edtLogin.getText().toString();
@@ -201,7 +213,7 @@ public class NavLogin extends Fragment {
 
             Cambrer cambrer = new Cambrer(0, "a", "a", null, login, password);
             loginTuple = new LoginTuple(cambrer, null);
-            final Long sessionId;
+//            final Long sessionId;
 
             // enviem logintuple
             Log.d("SRV", "enviant missatge");
@@ -213,23 +225,25 @@ public class NavLogin extends Fragment {
             // Enviarem "tupla" LoginTuple
             oos.writeObject(loginTuple);
             oos.flush();
-            Log.d("SRV", "missatge enviat");
+//            Log.d("SRV", "missatge enviat");
             // llegim ok
             ois.readInt();
 
-            Log.d("SRV", "esperant resposta del server");
+//            Log.d("SRV", "esperant resposta del server");
             int res = ois.readInt();
-            Log.d("SRV", "resposta del server REBUDA");
+//            Log.d("SRV", "resposta del server REBUDA = "+res);
 
             // si la resposta == OK
-            if (res == 1) {
+            if (res == CodiOperacio.OK.getNumVal()) {
                 // llegim LoginTuple
                 loginTuple = (LoginTuple) ois.readObject();
                 // enviem ok
                 oos.writeInt(1);
                 oos.flush();
+                errNo = NOERROR;
             } else {
                 // Empleat no consta a la BD o login incorrecte
+                Log.d("LOGIN","Empleat no consta a la BD o login incorrecte");
                 errNo = E_CREDS;
             }
         } catch (SocketTimeoutException e) {
@@ -239,7 +253,7 @@ public class NavLogin extends Fragment {
             errNo = E_SRVCON;
         } catch (Exception e) {
             e.printStackTrace();
-            Log.d("SRV", e.getLocalizedMessage());
+            Log.d("SRV", e.getMessage());
             errNo = E_UNKNOWN;
         } finally {
             try {
