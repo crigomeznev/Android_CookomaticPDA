@@ -161,7 +161,6 @@ public class PresaComandaActivity extends AppCompatActivity
         super.onStop();
         returnCode = RESULT_FIRST_USER;
         setResult(RESULT_FIRST_USER);
-        Toast.makeText(getApplicationContext(), "PresaComanda destruida", Toast.LENGTH_SHORT).show();
     }
 
     private void setLoading(boolean isLoading) {
@@ -416,7 +415,7 @@ public class PresaComandaActivity extends AppCompatActivity
     public void onSelectedCategoria(Categoria seleccionada) {
         mPlatsFiltrats.clear();
         for (Plat plat : hmPlats.values()) {
-            if (plat.getCategoria().equals(seleccionada) || seleccionada==null) {
+            if ((plat.getCategoria().equals(seleccionada) || seleccionada==null) && plat.isDisponible()) {
                 mPlatsFiltrats.add(plat);
             }
         }

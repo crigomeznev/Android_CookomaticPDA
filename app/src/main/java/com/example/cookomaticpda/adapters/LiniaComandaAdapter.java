@@ -57,7 +57,7 @@ public class LiniaComandaAdapter extends RecyclerView.Adapter<LiniaComandaAdapte
         holder.txvQuantitat.setText(lc.getQuantitat()+"");
         holder.txvNomPlat.setText(lc.getItem().getNom());
         holder.txvPreuPlat.setText(nf.format(lc.getItem().getPreu()));
-        holder.txvSubtotal.setText(nf.format(lc.getImport()));
+        holder.txvSubtotal.setText(nf.format(lc.getImport())+"€");
 
     }
 

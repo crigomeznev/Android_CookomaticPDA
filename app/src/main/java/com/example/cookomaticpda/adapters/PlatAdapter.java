@@ -30,12 +30,6 @@ public class PlatAdapter extends RecyclerView.Adapter<PlatAdapter.ViewHolder> {
     private PresaComandaActivity mActivity;
     private List<Plat> mPlats;
 
-    // Diferents colors segons estat de la Plat
-//    private static final int TIPUS_BUIDA = 0;
-//    private static final int TIPUS_PROPIA = 1;
-//    private static final int TIPUS_ALTRI = 2;
-
-
     public PlatAdapter(OnSelectedItemListener listener, PresaComandaActivity activity, List<Plat> plats) {
         mListener = listener;
         mActivity = activity;

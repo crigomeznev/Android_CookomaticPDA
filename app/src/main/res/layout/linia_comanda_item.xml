@@ -9,14 +9,6 @@
     android:background="@color/beige"
     android:padding="5dp">
 
-<!--    <LinearLayout-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="1dp"-->
-<!--        android:background="@color/burlyWood"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintBottom_toTopOf="@id/llaLinia"></LinearLayout>-->
-
     <LinearLayout
         android:id="@+id/llaLinia"
         android:layout_width="match_parent"
@@ -31,7 +23,7 @@
             android:id="@+id/txvQuantitat"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="0.4"
+            android:layout_weight="0.3"
             android:fontFamily="serif-monospace"
             android:text="1"
             android:textAlignment="center"
@@ -46,13 +38,24 @@
             android:fontFamily="serif-monospace"
             android:text="idly"
             android:textColor="@color/black"
+            android:ellipsize="end"
+            android:maxLines="1"></TextView>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.2"
+            android:fontFamily="serif-monospace"
+            android:text="x"
+            android:textAlignment="center"
+            android:textColor="@color/black"
             android:maxLines="1"></TextView>
 
         <TextView
             android:id="@+id/txvPreuPlat"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_weight="0.5"
             android:fontFamily="serif-monospace"
             android:text="25,00€"
             android:textAlignment="center"
@@ -61,14 +64,24 @@
             android:maxLines="1"></TextView>
 
         <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.2"
+            android:fontFamily="serif-monospace"
+            android:text="="
+            android:textAlignment="center"
+            android:textColor="@color/black"
+            android:maxLines="1"></TextView>
+
+        <TextView
             android:id="@+id/txvSubtotal"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_weight="0.5"
             android:fontFamily="serif-monospace"
             android:text="25,00€"
             android:textAlignment="center"
-            android:textColor="@color/black"
+            android:textColor="@color/dark_red"
             android:textStyle="bold"
             android:maxLines="1"></TextView>
 
